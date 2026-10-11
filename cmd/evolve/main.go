@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -41,10 +40,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func configPathFlag() *string {
-	return flag.String("config", envOr("EVOLVE_CONFIG", "config/evolve.yaml"), "path to evolve yaml")
 }
 
 func envOr(key, fallback string) string {
