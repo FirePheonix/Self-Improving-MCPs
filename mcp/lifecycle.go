@@ -8,6 +8,7 @@ import (
 
 	"self-improving-mcp/config"
 	"self-improving-mcp/store"
+	"self-improving-mcp/tracer"
 )
 
 // Start connects upstream, registers tools, and runs the Cursor-facing server.
@@ -45,7 +46,18 @@ func Start(ctx context.Context, cfg config.ProxyConfig) error {
 		}
 	}()
 
+	upstreamLabel := cfg.Upstream.Command
+	if upstreamLabel == "" {
+		upstreamLabel = cfg.Upstream.URL
+	}
+	sessionTracer, err := tracer.StartSession(db, upstreamLabel)
+	if err != nil {
+		return fmt.Errorf("start tracer session: %w", err)
+	}
+	log.Printf("trajectory session: %s", sessionTracer.SessionID())
+
 	proxy := NewProxy(upstream)
+	proxy.Tracer = sessionTracer
 	if err := proxy.RegisterUpstreamTools(ctx); err != nil {
 		return fmt.Errorf("register tools: %w", err)
 	}
