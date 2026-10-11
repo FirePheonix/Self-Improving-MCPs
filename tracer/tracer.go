@@ -4,6 +4,7 @@ import "context"
 
 // Call is one tools/call observation to record.
 type Call struct {
+	Seq           int
 	ToolName      string
 	ArgsJSON      string
 	ArgsHash      string
