@@ -10,7 +10,7 @@ import (
 // CallTool invokes a tool on the upstream server.
 func (u *StdioUpstream) CallTool(ctx context.Context, name string, args map[string]any) (CallResult, error) {
 	if u == nil || u.session == nil {
-		return CallResult{}, fmt.Errorf("upstream not connected")
+		return CallResult{}, ErrUpstreamNotConnected
 	}
 	if args == nil {
 		args = map[string]any{}
@@ -21,7 +21,7 @@ func (u *StdioUpstream) CallTool(ctx context.Context, name string, args map[stri
 		Arguments: args,
 	})
 	if err != nil {
-		return CallResult{}, fmt.Errorf("call upstream tool %s: %w", name, err)
+		return CallResult{}, wrapUpstream("call_tool", name, err)
 	}
 
 	out := CallResult{
