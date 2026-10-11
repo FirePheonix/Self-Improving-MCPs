@@ -31,6 +31,34 @@ Runtime SQLite lives under `data/` (gitignored). Default path: `data/trajectorie
 
 Override with `DATA_DIR` or `data_dir` in config. The proxy and `evolve` CLI should share the same directory so offline analysis sees live traffic.
 
+## Cursor wiring
+
+1. Copy `config/proxy.example.yaml` → `config/proxy.yaml` and set your real upstream `command` / `args` (or `url` later).
+2. Build the proxy:
+
+```powershell
+go build -o bin/proxy.exe ./cmd/proxy
+```
+
+3. Point Cursor at the proxy instead of the upstream. Example `mcp.json` entry (adjust the absolute path):
+
+```json
+{
+  "mcpServers": {
+    "self-improving": {
+      "command": "E:/self-improving-mcp/self-improving-mcp/bin/proxy.exe",
+      "args": ["-config", "E:/self-improving-mcp/self-improving-mcp/config/proxy.yaml"],
+      "env": {
+        "DATA_DIR": "E:/self-improving-mcp/self-improving-mcp/data"
+      }
+    }
+  }
+}
+```
+
+Cursor launches the proxy; the proxy launches (or connects to) your real MCP.
+
 ## Status
 
-Config + store are in. Next: MCP upstream client and Cursor-facing proxy.
+Proxy list + call forwarding works. Tracer and OpenTelemetry land next.
+
