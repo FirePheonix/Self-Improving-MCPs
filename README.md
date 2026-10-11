@@ -71,8 +71,15 @@ Do this once after wiring Cursor:
 
 If list or call fails, fix `config/proxy.yaml` upstream `command`/`args` first.
 
+## OpenTelemetry
+
+Optional. Set `OTEL_EXPORTER_OTLP_ENDPOINT` (see `.env.example`) to export spans/metrics.
+With no endpoint, the proxy uses no-op providers (zero collector required).
+
+Payloads are **not** attached to spans by default.
+
 ## Status
 
-Proxy + trajectory tracing work. OpenTelemetry next.
+Proxy + trajectory tracing + OTel instrumentation work. Offline agent loop next.
 
 

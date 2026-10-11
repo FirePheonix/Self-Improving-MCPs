@@ -7,12 +7,23 @@ import (
 	"path/filepath"
 
 	"self-improving-mcp/config"
+	"self-improving-mcp/observability"
 	"self-improving-mcp/store"
 	"self-improving-mcp/tracer"
 )
 
 // Start connects upstream, registers tools, and runs the Cursor-facing server.
 func Start(ctx context.Context, cfg config.ProxyConfig) error {
+	otelProviders, err := observability.SetupFromEnv(ctx)
+	if err != nil {
+		return fmt.Errorf("otel setup: %w", err)
+	}
+	defer func() {
+		if serr := otelProviders.Shutdown(context.Background()); serr != nil {
+			log.Printf("otel shutdown: %v", serr)
+		}
+	}()
+
 	dataDir := cfg.DataDir
 	if dataDir == "" {
 		dataDir = "data"

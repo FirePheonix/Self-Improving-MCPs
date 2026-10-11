@@ -8,6 +8,7 @@ import (
 
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"self-improving-mcp/observability"
 	"self-improving-mcp/tracer"
 )
 
@@ -22,9 +23,22 @@ func (p *Proxy) forwardCall(ctx context.Context, name string, req *mcpsdk.CallTo
 		return nil, err
 	}
 
+	ctx, span := observability.StartToolSpan(ctx, name)
 	start := time.Now()
 	res, err := p.Upstream.CallTool(ctx, name, args)
 	latency := time.Since(start).Milliseconds()
+
+	isError := err != nil || res.IsError
+	errType := ""
+	if err != nil {
+		errType = "upstream_error"
+	} else if res.IsError {
+		errType = "tool_error"
+	}
+	observability.EndToolSpan(span, isError, errType, err)
+	if metrics, merr := observability.GetToolMetrics(); merr == nil {
+		metrics.RecordToolCall(ctx, name, latency, isError)
+	}
 
 	p.record(ctx, name, args, res, err, latency)
 
