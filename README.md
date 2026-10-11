@@ -25,6 +25,12 @@ No private chain-of-thought required. We only look at tool names, arguments, res
 | `cmd/evolve/` | Offline evolution CLI. |
 | `data/` | Runtime database (gitignored). |
 
+## Data directory
+
+Runtime SQLite lives under `data/` (gitignored). Default path: `data/trajectories.db`.
+
+Override with `DATA_DIR` or `data_dir` in config. The proxy and `evolve` CLI should share the same directory so offline analysis sees live traffic.
+
 ## Status
 
-Scaffold only. Proxy and evolution loop land next.
+Config + store are in. Next: MCP upstream client and Cursor-facing proxy.
