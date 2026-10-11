@@ -5,11 +5,6 @@ import (
 	"fmt"
 )
 
-func runPropose(ctx context.Context) error {
-	_ = ctx
-	return fmt.Errorf("propose not wired yet")
-}
-
 func runSandbox(ctx context.Context) error {
 	_ = ctx
 	return fmt.Errorf("sandbox not wired yet")
