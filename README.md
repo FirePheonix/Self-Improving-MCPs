@@ -58,7 +58,21 @@ go build -o bin/proxy.exe ./cmd/proxy
 
 Cursor launches the proxy; the proxy launches (or connects to) your real MCP.
 
+## Dogfood checklist (manual)
+
+Do this once after wiring Cursor:
+
+1. Upstream alone works in Cursor (sanity check before the proxy).
+2. Switch Cursor to the proxy entry above; reload MCP servers.
+3. Confirm the tool list matches upstream (same names).
+4. Call one simple tool through the proxy; confirm the result looks normal.
+5. Check proxy stderr/logs for `proxy ready; serving stdio` and `active version: none`.
+6. Confirm `data/trajectories.db` exists (calls are not traced yet — DB is opened for versions).
+
+If list or call fails, fix `config/proxy.yaml` upstream `command`/`args` first.
+
 ## Status
 
 Proxy list + call forwarding works. Tracer and OpenTelemetry land next.
+
 
