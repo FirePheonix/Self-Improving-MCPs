@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 
 	"self-improving-mcp/agent"
@@ -13,9 +14,12 @@ import (
 )
 
 func runEvaluate(ctx context.Context) error {
-	cfgPath := configPathFlag()
-	skipLLM := flag.Bool("skip-llm", false, "only run deterministic detectors")
-	flag.Parse()
+	fs := flag.NewFlagSet("evaluate", flag.ContinueOnError)
+	cfgPath := fs.String("config", envOr("EVOLVE_CONFIG", "config/evolve.yaml"), "path to evolve yaml")
+	skipLLM := fs.Bool("skip-llm", false, "only run deterministic detectors")
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return err
+	}
 
 	cfg, err := loadEvolveConfig(*cfgPath)
 	if err != nil {

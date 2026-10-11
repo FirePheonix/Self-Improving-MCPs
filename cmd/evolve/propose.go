@@ -4,13 +4,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 
 	"self-improving-mcp/agent"
 )
 
 func runPropose(ctx context.Context) error {
-	cfgPath := configPathFlag()
-	flag.Parse()
+	fs := flag.NewFlagSet("propose", flag.ContinueOnError)
+	cfgPath := fs.String("config", envOr("EVOLVE_CONFIG", "config/evolve.yaml"), "path to evolve yaml")
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return err
+	}
 
 	cfg, err := loadEvolveConfig(*cfgPath)
 	if err != nil {

@@ -78,8 +78,37 @@ With no endpoint, the proxy uses no-op providers (zero collector required).
 
 Payloads are **not** attached to spans by default.
 
+## Offline evolution (`evolve`)
+
+```powershell
+go build -o bin/evolve.exe ./cmd/evolve
+
+# deterministic detectors (+ optional OpenAI labels)
+.\bin\evolve.exe evaluate -config config\evolve.example.yaml
+.\bin\evolve.exe evaluate -config config\evolve.example.yaml -skip-llm
+
+# draft a candidate overlay (needs OPENAI_API_KEY)
+.\bin\evolve.exe propose -config config\evolve.example.yaml
+
+# replay recent traffic baseline vs candidate
+.\bin\evolve.exe sandbox -config config\evolve.example.yaml -version <VERSION_ID>
+
+.\bin\evolve.exe versions
+.\bin\evolve.exe promote -version <VERSION_ID>
+.\bin\evolve.exe discard -version <VERSION_ID>
+.\bin\evolve.exe rollback -version <VERSION_ID>
+
+# full loop: evaluate → propose → sandbox → discard/promote
+.\bin\evolve.exe run -config config\evolve.example.yaml
+.\bin\evolve.exe run -config config\evolve.example.yaml -auto-promote
+```
+
+After promote/rollback, **restart the proxy** so Cursor picks up the new overlay.
+
+Daily workflow: use Cursor through the proxy → run `evolve run` → restart proxy if something was promoted.
+
 ## Status
 
-Proxy + trajectory tracing + OTel instrumentation work. Offline agent loop next.
+v1 loop complete: observe → analyze → propose → sandbox → promote/discard.
 
 
