@@ -1,0 +1,30 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# runtime data
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# go binaries
+/bin/
+/proxy.exe
+/proxy
+/evolve.exe
+/evolve
+*.exe
+
+# go build cache / local
+/dist/
+/tmp/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
