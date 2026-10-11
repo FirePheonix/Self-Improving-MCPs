@@ -1,0 +1,15 @@
+data_dir: data
+
+upstream:
+  # Example: wrap a local stdio MCP server
+  command: npx
+  args:
+    - "-y"
+    - "@modelcontextprotocol/server-filesystem"
+    - "."
+  # Or use an HTTP MCP endpoint instead of command/args:
+  # url: http://127.0.0.1:3000/mcp
+  env: {}
+
+redact_payloads: true
+capture_payloads_in_spans: false
