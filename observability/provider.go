@@ -1,8 +1,6 @@
 package observability
 
 import (
-	"context"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -46,10 +44,4 @@ func Tracer(name string) trace.Tracer {
 // Meter returns a named meter from the global provider.
 func Meter(name string) metric.Meter {
 	return otel.Meter(name)
-}
-
-// Shutdown is a no-op placeholder until the shutdown helper lands.
-func (p *Providers) Shutdown(ctx context.Context) error {
-	_ = ctx
-	return nil
 }
