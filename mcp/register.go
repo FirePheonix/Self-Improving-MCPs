@@ -8,7 +8,8 @@ import (
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterUpstreamTools lists upstream tools and re-exposes them 1:1 on the proxy.
+// RegisterUpstreamTools lists upstream tools and re-exposes them 1:1 on the proxy,
+// applying description/schema patches and composed tools from the active overlay.
 func (p *Proxy) RegisterUpstreamTools(ctx context.Context) error {
 	if p == nil || p.Upstream == nil || p.Server == nil {
 		return fmt.Errorf("proxy not initialized")
@@ -20,13 +21,27 @@ func (p *Proxy) RegisterUpstreamTools(ctx context.Context) error {
 	}
 
 	for _, tool := range tools {
-		t := tool
+		t := applyToolPatch(tool, p.Overlay)
+		name := t.Name
 		p.Server.SDK().AddTool(&mcpsdk.Tool{
 			Name:        t.Name,
 			Description: t.Description,
 			InputSchema: t.InputSchema,
 		}, func(ctx context.Context, req *mcpsdk.CallToolRequest) (*mcpsdk.CallToolResult, error) {
-			return p.forwardCall(ctx, t.Name, req)
+			return p.forwardCall(ctx, name, req)
+		})
+	}
+
+	for name, ct := range p.Overlay.ComposedTools {
+		n := name
+		desc := ct.Description
+		schema := any(map[string]any{"type": "object", "properties": map[string]any{}})
+		p.Server.SDK().AddTool(&mcpsdk.Tool{
+			Name:        n,
+			Description: desc,
+			InputSchema: schema,
+		}, func(ctx context.Context, req *mcpsdk.CallToolRequest) (*mcpsdk.CallToolResult, error) {
+			return p.forwardCall(ctx, n, req)
 		})
 	}
 	return nil
