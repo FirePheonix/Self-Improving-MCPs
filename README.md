@@ -66,13 +66,13 @@ Do this once after wiring Cursor:
 2. Switch Cursor to the proxy entry above; reload MCP servers.
 3. Confirm the tool list matches upstream (same names).
 4. Call one simple tool through the proxy; confirm the result looks normal.
-5. Check proxy stderr/logs for `proxy ready; serving stdio` and `active version: none`.
-6. Confirm `data/trajectories.db` exists (calls are not traced yet — DB is opened for versions).
+5. Check proxy stderr/logs for `proxy ready; serving stdio`, `trajectory session: …`, and `active version: none`.
+6. Call a tool, then inspect `data/trajectories.db` (see `tracer/README.md` for SQL).
 
 If list or call fails, fix `config/proxy.yaml` upstream `command`/`args` first.
 
 ## Status
 
-Proxy list + call forwarding works. Tracer and OpenTelemetry land next.
+Proxy + trajectory tracing work. OpenTelemetry next.
 
 
