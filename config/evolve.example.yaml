@@ -1,0 +1,10 @@
+data_dir: data
+
+models:
+  label: gpt-4.1-nano
+  reason: gpt-4.1-mini
+
+promote:
+  max_error_rate_increase: 0.02
+  max_latency_p95_increase: 0.10
+  require_efficiency_win: true
