@@ -42,8 +42,3 @@ func argsFromRequest(req *mcpsdk.CallToolRequest) (map[string]any, error) {
 	}
 	return args, nil
 }
-
-// forwardCall is stubbed until call forwarding lands.
-func (p *Proxy) forwardCall(_ context.Context, name string, _ *mcpsdk.CallToolRequest) (*mcpsdk.CallToolResult, error) {
-	return nil, fmt.Errorf("forward not wired for tool %s", name)
-}
