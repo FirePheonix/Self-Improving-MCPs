@@ -23,11 +23,31 @@ func (p *Proxy) forwardCall(ctx context.Context, name string, req *mcpsdk.CallTo
 		return nil, err
 	}
 
+	routed, denied, note := p.applyRouting(name)
+	if denied {
+		return &mcpsdk.CallToolResult{
+			IsError: true,
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: "denied by overlay routing: " + note}},
+		}, nil
+	}
+	name = routed
+
 	ctx, span := observability.StartToolSpan(ctx, name)
 	start := time.Now()
-	res, err := p.Upstream.CallTool(ctx, name, args)
-	latency := time.Since(start).Milliseconds()
 
+	var res CallResult
+	if ct, ok := p.Overlay.ComposedTools[name]; ok {
+		res, err = p.runComposed(ctx, ct.Steps)
+	} else if cached, ok := p.cacheGet(name, args); ok {
+		res, err = cached, nil
+	} else {
+		res, err = p.Upstream.CallTool(ctx, name, args)
+		if err == nil {
+			p.cachePut(name, args, res)
+		}
+	}
+
+	latency := time.Since(start).Milliseconds()
 	isError := err != nil || res.IsError
 	errType := ""
 	if err != nil {
@@ -39,24 +59,14 @@ func (p *Proxy) forwardCall(ctx context.Context, name string, req *mcpsdk.CallTo
 	if metrics, merr := observability.GetToolMetrics(); merr == nil {
 		metrics.RecordToolCall(ctx, name, latency, isError)
 	}
-
 	p.record(ctx, name, args, res, err, latency)
 
 	if err != nil {
 		return nil, err
 	}
-
-	out := &mcpsdk.CallToolResult{
-		IsError:           res.IsError,
-		StructuredContent: res.StructuredAny,
-	}
-	for _, c := range res.Content {
-		switch c.Type {
-		case "text", "":
-			out.Content = append(out.Content, &mcpsdk.TextContent{Text: c.Text})
-		default:
-			out.Content = append(out.Content, &mcpsdk.TextContent{Text: fmt.Sprintf("[%s] %s", c.Type, c.Text)})
-		}
+	out := callResultToSDK(res)
+	if out == nil {
+		return nil, fmt.Errorf("empty tool result")
 	}
 	return out, nil
 }

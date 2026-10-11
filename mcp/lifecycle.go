@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"self-improving-mcp/config"
+	improvementsandbox "self-improving-mcp/improvement-sandbox"
 	"self-improving-mcp/observability"
 	"self-improving-mcp/store"
 	"self-improving-mcp/tracer"
@@ -41,10 +42,19 @@ func Start(ctx context.Context, cfg config.ProxyConfig) error {
 	if err != nil {
 		return fmt.Errorf("read active version: %w", err)
 	}
+	var overlay improvementsandbox.Overlay
 	if activeID == "" {
 		log.Printf("active version: none (baseline upstream)")
 	} else {
-		log.Printf("active version: %s (overlay apply not wired yet)", activeID)
+		ver, err := db.GetVersion(activeID)
+		if err != nil {
+			return fmt.Errorf("load active version: %w", err)
+		}
+		overlay, err = improvementsandbox.ParseOverlay(ver.OverlayJSON)
+		if err != nil {
+			return fmt.Errorf("parse active overlay: %w", err)
+		}
+		log.Printf("active version: %s", activeID)
 	}
 
 	upstream, err := ConnectStdio(ctx, cfg.Upstream)
@@ -69,6 +79,7 @@ func Start(ctx context.Context, cfg config.ProxyConfig) error {
 
 	proxy := NewProxy(upstream)
 	proxy.Tracer = sessionTracer
+	proxy.Overlay = overlay
 	if err := proxy.RegisterUpstreamTools(ctx); err != nil {
 		return fmt.Errorf("register tools: %w", err)
 	}
