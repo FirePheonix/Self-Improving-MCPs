@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"time"
 
 	"self-improving-mcp/config"
 	improvementsandbox "self-improving-mcp/improvement-sandbox"
@@ -13,8 +14,28 @@ import (
 	"self-improving-mcp/tracer"
 )
 
-// Start connects upstream, registers tools, and runs the Cursor-facing server.
+// Start connects the configured stdio/HTTP upstream and runs the Cursor-facing server.
 func Start(ctx context.Context, cfg config.ProxyConfig) error {
+	upstream, err := ConnectStdio(ctx, cfg.Upstream)
+	if err != nil {
+		return err
+	}
+	label := cfg.Upstream.Command
+	if label == "" {
+		label = cfg.Upstream.URL
+	}
+	return StartWithUpstream(ctx, cfg, upstream, label)
+}
+
+// StartWithUpstream runs the full proxy runtime (tracing, overlay, hot reload, status endpoints)
+// over any Upstream, including an in-process one built with the simcp library. It closes the
+// upstream on return. label names the upstream in trajectory sessions.
+func StartWithUpstream(ctx context.Context, cfg config.ProxyConfig, upstream Upstream, label string) error {
+	defer func() {
+		if cerr := upstream.Close(); cerr != nil {
+			log.Printf("upstream close: %v", cerr)
+		}
+	}()
 	otelProviders, err := observability.SetupFromEnv(ctx)
 	if err != nil {
 		return fmt.Errorf("otel setup: %w", err)
@@ -57,21 +78,7 @@ func Start(ctx context.Context, cfg config.ProxyConfig) error {
 		log.Printf("active version: %s", activeID)
 	}
 
-	upstream, err := ConnectStdio(ctx, cfg.Upstream)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if cerr := upstream.Close(); cerr != nil {
-			log.Printf("upstream close: %v", cerr)
-		}
-	}()
-
-	upstreamLabel := cfg.Upstream.Command
-	if upstreamLabel == "" {
-		upstreamLabel = cfg.Upstream.URL
-	}
-	sessionTracer, err := tracer.StartSession(db, upstreamLabel)
+	sessionTracer, err := tracer.StartSession(db, label)
 	if err != nil {
 		return fmt.Errorf("start tracer session: %w", err)
 	}
@@ -80,8 +87,21 @@ func Start(ctx context.Context, cfg config.ProxyConfig) error {
 	proxy := NewProxy(upstream)
 	proxy.Tracer = sessionTracer
 	proxy.Overlay = overlay
+	proxy.OverlayVersion = activeID
 	if err := proxy.RegisterUpstreamTools(ctx); err != nil {
 		return fmt.Errorf("register tools: %w", err)
+	}
+
+	if cfg.StatusAddr != "" {
+		addr, err := proxy.ServeStatus(ctx, cfg.StatusAddr)
+		if err != nil {
+			return err
+		}
+		log.Printf("status endpoints on http://%s (/health, /overlay)", addr)
+	}
+	if cfg.ReloadIntervalSeconds >= 0 {
+		interval := time.Duration(cfg.ReloadIntervalSeconds) * time.Second
+		go proxy.WatchActive(ctx, db, interval)
 	}
 
 	log.Printf("proxy ready; serving stdio")

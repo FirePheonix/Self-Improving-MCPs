@@ -23,7 +23,9 @@ func (p *Proxy) forwardCall(ctx context.Context, name string, req *mcpsdk.CallTo
 		return nil, err
 	}
 
-	routed, denied, note := p.applyRouting(name)
+	ov, version := p.snapshot()
+	requested := name
+	routed, denied, note := applyRouting(ov, name)
 	if denied {
 		return &mcpsdk.CallToolResult{
 			IsError: true,
@@ -32,18 +34,22 @@ func (p *Proxy) forwardCall(ctx context.Context, name string, req *mcpsdk.CallTo
 	}
 	name = routed
 
-	ctx, span := observability.StartToolSpan(ctx, name)
+	ctx, span := observability.StartToolSpan(ctx, name, observability.ToolSpanInfo{
+		SessionID:      p.sessionID(),
+		OverlayVersion: version,
+		RequestedTool:  requested,
+	})
 	start := time.Now()
 
 	var res CallResult
-	if ct, ok := p.Overlay.ComposedTools[name]; ok {
+	if ct, ok := ov.ComposedTools[name]; ok {
 		res, err = p.runComposed(ctx, ct.Steps)
-	} else if cached, ok := p.cacheGet(name, args); ok {
+	} else if cached, ok := p.cacheGet(ov, name, args); ok {
 		res, err = cached, nil
 	} else {
 		res, err = p.Upstream.CallTool(ctx, name, args)
 		if err == nil {
-			p.cachePut(name, args, res)
+			p.cachePut(ov, name, args, res)
 		}
 	}
 
@@ -69,6 +75,14 @@ func (p *Proxy) forwardCall(ctx context.Context, name string, req *mcpsdk.CallTo
 		return nil, fmt.Errorf("empty tool result")
 	}
 	return out, nil
+}
+
+// sessionID returns the trajectory session id when the tracer exposes one, else "".
+func (p *Proxy) sessionID() string {
+	if s, ok := p.Tracer.(interface{ SessionID() string }); ok {
+		return s.SessionID()
+	}
+	return ""
 }
 
 func (p *Proxy) record(ctx context.Context, name string, args map[string]any, res CallResult, callErr error, latencyMs int64) {

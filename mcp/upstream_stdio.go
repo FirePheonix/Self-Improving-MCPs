@@ -23,6 +23,7 @@ func ConnectStdio(ctx context.Context, cfg config.UpstreamConfig) (*StdioUpstrea
 	}
 
 	cmd := exec.CommandContext(ctx, cfg.Command, cfg.Args...)
+	cmd.Dir = cfg.Dir
 	cmd.Env = os.Environ()
 	for k, v := range cfg.Env {
 		cmd.Env = append(cmd.Env, k+"="+v)

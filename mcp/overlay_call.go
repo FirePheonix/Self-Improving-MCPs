@@ -13,23 +13,12 @@ import (
 	improvementsandbox "self-improving-mcp/improvement-sandbox"
 )
 
-func (p *Proxy) applyRouting(name string) (newName string, denied bool, note string) {
-	for _, r := range p.Overlay.Routing {
-		if r.FromTool != name {
-			continue
-		}
-		if r.Deny {
-			return name, true, r.Note
-		}
-		if r.ToTool != "" {
-			return r.ToTool, false, r.Note
-		}
-	}
-	return name, false, ""
+func applyRouting(ov improvementsandbox.Overlay, name string) (newName string, denied bool, note string) {
+	return ov.ResolveRoute(name)
 }
 
-func (p *Proxy) cacheTTL(tool string) time.Duration {
-	for _, c := range p.Overlay.Cache {
+func cacheTTL(ov improvementsandbox.Overlay, tool string) time.Duration {
+	for _, c := range ov.Cache {
 		if c.ToolName == tool && c.TTLSeconds > 0 {
 			return time.Duration(c.TTLSeconds) * time.Second
 		}
@@ -43,8 +32,8 @@ func cacheKey(tool string, args map[string]any) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func (p *Proxy) cacheGet(tool string, args map[string]any) (CallResult, bool) {
-	ttl := p.cacheTTL(tool)
+func (p *Proxy) cacheGet(ov improvementsandbox.Overlay, tool string, args map[string]any) (CallResult, bool) {
+	ttl := cacheTTL(ov, tool)
 	if ttl <= 0 {
 		return CallResult{}, false
 	}
@@ -58,8 +47,8 @@ func (p *Proxy) cacheGet(tool string, args map[string]any) (CallResult, bool) {
 	return ent.result, true
 }
 
-func (p *Proxy) cachePut(tool string, args map[string]any, res CallResult) {
-	ttl := p.cacheTTL(tool)
+func (p *Proxy) cachePut(ov improvementsandbox.Overlay, tool string, args map[string]any, res CallResult) {
+	ttl := cacheTTL(ov, tool)
 	if ttl <= 0 || res.IsError {
 		return
 	}

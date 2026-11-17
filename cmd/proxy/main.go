@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	_ = config.LoadDotEnv(".env")
 	configPath := flag.String("config", envOr("PROXY_CONFIG", "config/proxy.yaml"), "path to proxy yaml config")
 	flag.Parse()
 

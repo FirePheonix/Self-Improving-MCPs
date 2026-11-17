@@ -28,8 +28,9 @@ func SetupNoop() *Providers {
 func newResource() (*resource.Resource, error) {
 	return resource.Merge(
 		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
+		// Schemaless: resource.Default() carries its own schema URL (SDK-defined),
+		// and pinning semconv here conflicts with it at Merge time.
+		resource.NewSchemaless(
 			semconv.ServiceName("self-improving-mcp"),
 			semconv.ServiceVersion("0.1.0"),
 		),

@@ -14,9 +14,38 @@ type Proxy struct {
 	Upstream Upstream
 	Tracer   tracer.Tracer
 	Overlay  improvementsandbox.Overlay
+	// OverlayVersion is the active overlay version id ("" = baseline); stamped on spans.
+	OverlayVersion string
 
 	cacheMu sync.Mutex
 	cache   map[string]cacheEntry
+
+	// stateMu guards the hot-reloadable surface: the overlay snapshot, which tool names this
+	// proxy has registered (so a reload can remove composed tools that disappeared), and the
+	// last reload outcome shown on /overlay.
+	stateMu       sync.RWMutex
+	state         *overlayState
+	registered    map[string]bool
+	upstreamTools []ToolInfo
+	reloadErr     string
+}
+
+// overlayState is one immutable overlay snapshot. A call reads it once and uses it throughout,
+// so a reload mid-call can never mix the old routing with the new cache rules.
+type overlayState struct {
+	overlay  improvementsandbox.Overlay
+	version  string
+	loadedAt time.Time
+}
+
+// snapshot returns the overlay and version currently in force.
+func (p *Proxy) snapshot() (improvementsandbox.Overlay, string) {
+	p.stateMu.RLock()
+	defer p.stateMu.RUnlock()
+	if p.state != nil {
+		return p.state.overlay, p.state.version
+	}
+	return p.Overlay, p.OverlayVersion
 }
 
 type cacheEntry struct {
@@ -30,5 +59,7 @@ func NewProxy(upstream Upstream) *Proxy {
 		Server:   NewServer("self-improving-mcp", "0.1.0"),
 		Upstream: upstream,
 		cache:    map[string]cacheEntry{},
+
+		registered: map[string]bool{},
 	}
 }
