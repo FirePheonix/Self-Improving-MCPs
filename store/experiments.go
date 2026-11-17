@@ -77,3 +77,26 @@ func (db *DB) GetExperiment(id int64) (Experiment, error) {
 	e.FinishedAt = finished.String
 	return e, nil
 }
+
+// ExperimentsForVersion returns every experiment recorded for a version, newest first.
+func (db *DB) ExperimentsForVersion(versionID string) ([]Experiment, error) {
+	rows, err := db.sql.Query(
+		`SELECT id, version_id, baseline_version_id, status, scorecard_json, created_at, finished_at
+		 FROM experiments WHERE version_id = ? ORDER BY id DESC`, versionID)
+	if err != nil {
+		return nil, fmt.Errorf("list experiments: %w", err)
+	}
+	defer rows.Close()
+	var out []Experiment
+	for rows.Next() {
+		var e Experiment
+		var baseline, finished sql.NullString
+		if err := rows.Scan(&e.ID, &e.VersionID, &baseline, &e.Status, &e.ScorecardJSON, &e.CreatedAt, &finished); err != nil {
+			return nil, err
+		}
+		e.BaselineVersionID = baseline.String
+		e.FinishedAt = finished.String
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}

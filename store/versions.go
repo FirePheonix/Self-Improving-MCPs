@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -67,6 +68,9 @@ func (db *DB) GetVersion(id string) (Version, error) {
 func (db *DB) ActiveVersionID() (string, error) {
 	var id sql.NullString
 	err := db.sql.QueryRow(`SELECT version_id FROM active_version WHERE id = 1`).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil // no pointer row yet means no active version
+	}
 	if err != nil {
 		return "", fmt.Errorf("active version: %w", err)
 	}
@@ -82,17 +86,37 @@ func (db *DB) SetActiveVersion(versionID string) error {
 	defer func() { _ = tx.Rollback() }()
 
 	now := time.Now().UTC().Format(time.RFC3339)
-	if _, err := tx.Exec(
+	res, err := tx.Exec(
 		`UPDATE versions SET status = 'active', activated_at = ? WHERE id = ?`,
 		now, versionID,
-	); err != nil {
+	)
+	if err != nil {
 		return fmt.Errorf("mark version active: %w", err)
 	}
+	// A promote that matches no version must fail loudly, not leave the proxy pointing at nothing.
+	if n, rerr := res.RowsAffected(); rerr != nil || n != 1 {
+		return fmt.Errorf("unknown version %q", versionID)
+	}
+	// Upsert: the pointer row is seeded by the migration, but never rely on it silently existing.
 	if _, err := tx.Exec(
-		`UPDATE active_version SET version_id = ? WHERE id = 1`,
+		`INSERT INTO active_version (id, version_id) VALUES (1, ?)
+		 ON CONFLICT(id) DO UPDATE SET version_id = excluded.version_id`,
 		versionID,
 	); err != nil {
 		return fmt.Errorf("set active pointer: %w", err)
 	}
 	return tx.Commit()
+}
+
+// ClearActiveVersion points the proxy back at the baseline upstream (no overlay).
+// It is the rollback target for "undo everything"; version rows are left untouched.
+func (db *DB) ClearActiveVersion() error {
+	_, err := db.sql.Exec(
+		`INSERT INTO active_version (id, version_id) VALUES (1, NULL)
+		 ON CONFLICT(id) DO UPDATE SET version_id = NULL`,
+	)
+	if err != nil {
+		return fmt.Errorf("clear active version: %w", err)
+	}
+	return nil
 }
