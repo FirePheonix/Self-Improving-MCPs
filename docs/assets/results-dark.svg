@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" width="1000" height="360" role="img" aria-labelledby="t d">
+  <title id="t">First gate pass: Map server shipped without descriptions</title>
+  <desc id="d">Sealed tasks right out of 150, before and after each change, judged by the selection gate. Improver's descriptions: 107 to 124, fixed 17, broke 0, pass. The server's real descriptions put back: 106 to 119, fixed 15, broke 2, fail. Harmful route control: 104 to 98, broke 6, fail. Empty overlay control: 104 to 104, inconclusive.</desc>
+  <style>:root{--ink:#e6edf3;--muted:#9198a1;--faint:#6e7681;--line:#3d444d;--page:#0d1117;--card:#151b23;--body:#0d1117;--glass:#1a2233;--blue:#3987e5;--aqua:#199e70;--violet:#9085e9;--orange:#d95926;--amber:#c98500;--red:#e66767;--green:#0ca30c;--blue-soft:#132338;--aqua-soft:#0f2a21;--violet-soft:#211d3d;--orange-soft:#33190f;--red-soft:#361818;--green-soft:#0f2a0f;--amber-soft:#2e2209;--wood:#a8733e;--metal:#adb5bd;--glint:#e6edf3}
+    text{font-family:"Segoe UI",-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif}
+    .title{font-size:17px;font-weight:650;fill:var(--ink)}
+    .sub{font-size:13px;fill:var(--muted)}
+    .row{font-size:15px;font-weight:600;fill:var(--ink)}
+    .rows{font-size:12.5px;fill:var(--muted)}
+    .tick{font-size:12px;fill:var(--muted)}
+    .val{font-size:13px;fill:var(--ink);font-weight:650}
+    .valm{font-size:12.5px;fill:var(--muted)}
+    .grid{stroke:var(--line);stroke-width:1}
+    .before{fill:var(--page);stroke:var(--faint);stroke-width:2.2}
+    .pill{font-size:12px;font-weight:700}
+    .note{font-size:12px;fill:var(--muted);font-style:italic}
+  </style>
+  <defs>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" style="fill:var(--green)"/></marker>
+    <marker id="mr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" style="fill:var(--red)"/></marker>
+  </defs>
+
+  <text class="title" x="30" y="34">Map server shipped without descriptions: sealed tasks right, before → after</text>
+  <text class="sub" x="30" y="55">150 sealed tasks the improver never saw · same agent (gpt-4.1-mini) · arguments validated · seed 2026</text>
+
+  <!-- grid: x = 360 + (n - 95) * 13.143 -->
+  <g>
+    <line class="grid" x1="425.7" y1="78" x2="425.7" y2="300"/><text class="tick" x="425.7" y="318" text-anchor="middle">100</text>
+    <line class="grid" x1="557.1" y1="78" x2="557.1" y2="300"/><text class="tick" x="557.1" y="318" text-anchor="middle">110</text>
+    <line class="grid" x1="688.6" y1="78" x2="688.6" y2="300"/><text class="tick" x="688.6" y="318" text-anchor="middle">120</text>
+    <line class="grid" x1="820" y1="78" x2="820" y2="300"/><text class="tick" x="820" y="318" text-anchor="middle">130</text>
+  </g>
+
+  <!-- 1: improver -->
+  <text class="row" x="30" y="111">improver's descriptions</text>
+  <text class="rows" x="30" y="129">learned on DEV from the agent's mistakes</text>
+  <line x1="526" y1="113" x2="733" y2="113" style="stroke:var(--green);stroke-width:2.6" marker-end="url(#mg)"/>
+  <circle class="before" cx="517.7" cy="113" r="6"/>
+  <circle cx="741.1" cy="113" r="6.5" style="fill:var(--green)"/>
+  <text class="valm" x="505" y="117.5" text-anchor="end">107</text>
+  <text class="val" x="754" y="117.5">124</text>
+  <rect x="852" y="99" width="54" height="26" rx="13" style="fill:var(--green-soft);stroke:var(--green);stroke-width:1.4"/>
+  <text class="pill" x="879" y="116.5" text-anchor="middle" style="fill:var(--green)">pass</text>
+  <text class="rows" x="914" y="116.5">+17, −0</text>
+
+  <!-- 2: real docs -->
+  <text class="row" x="30" y="166">server's real descriptions</text>
+  <text class="rows" x="30" y="184">put back (the expected fix)</text>
+  <line x1="513" y1="168" x2="667" y2="168" style="stroke:var(--red);stroke-width:2.6" marker-end="url(#mr)"/>
+  <circle class="before" cx="504.6" cy="168" r="6"/>
+  <circle cx="675.4" cy="168" r="6.5" style="fill:var(--red)"/>
+  <text class="valm" x="492" y="172.5" text-anchor="end">106</text>
+  <text class="val" x="688" y="172.5">119</text>
+  <rect x="852" y="154" width="54" height="26" rx="13" style="fill:var(--red-soft);stroke:var(--red);stroke-width:1.4"/>
+  <text class="pill" x="879" y="171.5" text-anchor="middle" style="fill:var(--red)">fail</text>
+  <text class="rows" x="914" y="171.5">+15, −2</text>
+
+  <!-- 3: harmful control -->
+  <text class="row" x="30" y="221">harmful route</text>
+  <text class="rows" x="30" y="239">control: must fail</text>
+  <line x1="470" y1="223" x2="408" y2="223" style="stroke:var(--red);stroke-width:2.6" marker-end="url(#mr)"/>
+  <circle class="before" cx="478.3" cy="223" r="6"/>
+  <circle cx="399.4" cy="223" r="6.5" style="fill:var(--red)"/>
+  <text class="valm" x="491" y="227.5">104</text>
+  <text class="val" x="386" y="227.5" text-anchor="end">98</text>
+  <rect x="852" y="209" width="54" height="26" rx="13" style="fill:var(--red-soft);stroke:var(--red);stroke-width:1.4"/>
+  <text class="pill" x="879" y="226.5" text-anchor="middle" style="fill:var(--red)">fail</text>
+  <text class="rows" x="914" y="226.5">+0, −6</text>
+
+  <!-- 4: empty control -->
+  <text class="row" x="30" y="276">empty overlay</text>
+  <text class="rows" x="30" y="294">control: no change</text>
+  <circle cx="478.3" cy="278" r="6.5" style="fill:var(--faint)"/>
+  <text class="valm" x="491" y="282.5">104</text>
+  <rect x="852" y="264" width="98" height="26" rx="13" style="fill:var(--amber-soft);stroke:var(--amber);stroke-width:1.4"/>
+  <text class="pill" x="901" y="281.5" text-anchor="middle" style="fill:var(--amber)">inconclusive</text>
+
+  <text class="note" x="30" y="346">Hollow dot: before; filled: after. Starting counts differ slightly because disputed tasks are re-asked separately in each comparison.</text>
+</svg>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" width="760" height="200" role="img" aria-labelledby="t d">
+  <title id="t">Self-Improving MCP</title>
+  <desc id="d">Logo: a server that watches itself through a telescope, sees itself in a mirror, and repairs itself with a hammer and a screwdriver.</desc>
+  <style>/*THEME*/
+    .ink{stroke:var(--ink);fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .body{fill:var(--body)} .glass{fill:var(--glass)}
+    .violet{fill:var(--violet)} .aqua{fill:var(--aqua)} .orange{fill:var(--orange)} .amber{fill:var(--amber)}
+    .wood{fill:var(--wood)} .metal{fill:var(--metal)}
+    .ghost{stroke:var(--violet);fill:none;opacity:.55}
+    .glint{stroke:var(--glint);stroke-linecap:round}
+    .word{font-family:"Segoe UI",-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:58px;font-weight:600;letter-spacing:-1px}
+    .w1{fill:var(--ink)} .w2{fill:var(--violet);font-weight:700}
+  </style>
+
+  <g id="mark">
+    <!-- telescope on a tripod, aimed at the server: it observes itself -->
+    <path class="ink" stroke-width="4" d="M40 118 L27 170 M40 118 L40 170 M40 118 L53 170"/>
+    <g transform="translate(40 112) rotate(-14)">
+      <rect class="body ink" stroke-width="4" x="-22" y="-7" width="38" height="14" rx="4"/>
+      <rect class="violet ink" stroke-width="4" x="14" y="-10" width="13" height="20" rx="3"/>
+      <rect class="body ink" stroke-width="4" x="-31" y="-4" width="10" height="8" rx="2"/>
+    </g>
+    <circle class="body ink" stroke-width="4" cx="40" cy="117" r="4"/>
+
+    <!-- the server -->
+    <rect class="body ink" stroke-width="5" x="74" y="30" width="54" height="100" rx="10"/>
+    <path class="ink" stroke-width="4" d="M74 63 H128 M74 97 H128"/>
+    <path class="ink" stroke-width="4" d="M85 46.5 H104 M85 80 H104 M85 113.5 H104"/>
+    <circle class="aqua" cx="115" cy="46.5" r="4.5"/>
+    <circle class="amber" cx="115" cy="80" r="4.5"/>
+    <circle class="violet" cx="115" cy="113.5" r="4.5"/>
+
+    <!-- mirror on a stand, showing the server's reflection: it sees itself -->
+    <path class="ink" stroke-width="4" d="M164 112 V164 M150 168 H178"/>
+    <ellipse class="glass ink" stroke-width="5" cx="164" cy="82" rx="21" ry="28"/>
+    <rect class="ghost" stroke-width="2.5" x="156" y="66" width="16" height="31" rx="3"/>
+    <path class="ghost" stroke-width="2" d="M156 76.5 H172 M156 87 H172"/>
+    <path class="glint" stroke-width="3" d="M173 64 L177 72"/>
+
+    <!-- hammer and screwdriver, crossed: it repairs itself -->
+    <g transform="translate(101 170) scale(.82)">
+      <g transform="rotate(40)">
+        <rect class="wood ink" stroke-width="4" x="-3.5" y="-20" width="7" height="44" rx="3"/>
+        <path class="metal ink" stroke-width="4" d="M-15 -31 H11 Q16 -31 16 -26 V-20 H-15 Q-18 -25.5 -15 -31 Z"/>
+      </g>
+      <g transform="rotate(-40)">
+        <path class="ink" stroke-width="4.5" d="M0 -33 V-4"/>
+        <path class="ink" stroke-width="3.5" d="M-3 -35 H3"/>
+        <rect class="orange ink" stroke-width="4" x="-6.5" y="-4" width="13" height="28" rx="5"/>
+      </g>
+    </g>
+  </g>
+
+  <text class="word" x="222" y="120"><tspan class="w1">self-improving</tspan><tspan class="w2" dx="14">mcp</tspan></text>
+</svg>
