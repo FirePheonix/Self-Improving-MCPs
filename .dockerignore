@@ -1,0 +1,8 @@
+bin/
+data/
+.git/
+.env
+.env.*
+*.exe
+*.db
+scripts/subagent-oracle/

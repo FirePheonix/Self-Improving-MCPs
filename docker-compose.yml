@@ -1,0 +1,35 @@
+# Proxy + a local OpenTelemetry collector that prints what the proxy emits.
+#   docker compose up --build otel          (start the collector)
+#   docker compose run --rm -T proxy        (stdio MCP: point your client at this command)
+services:
+  otel:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config", "/etc/otelcol/config.yaml"]
+    volumes:
+      - ./scripts/smoke/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports: ["4318:4318"]
+
+  proxy:
+    build: .
+    image: simcp
+    stdin_open: true
+    command: ["proxy", "-config", "/config/proxy.yaml"]
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel:4318
+    volumes:
+      - simcp-data:/data
+      - ./config:/config:ro
+    ports: ["127.0.0.1:8787:8787"]   # status_addr: 0.0.0.0:8787 in proxy.yaml
+    depends_on: [otel]
+
+  evolve:
+    image: simcp
+    profiles: ["tools"]
+    command: ["evolve", "versions", "-config", "/config/evolve.yaml"]
+    env_file: [.env]
+    volumes:
+      - simcp-data:/data
+      - ./config:/config:ro
+
+volumes:
+  simcp-data:
