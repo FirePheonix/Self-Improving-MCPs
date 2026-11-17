@@ -2,8 +2,14 @@
 
 ## Install
 
-Requires Go 1.26+, Node 18+ (only for `npx`-launched servers) and, for the offline steps, an `OPENAI_API_KEY`
-(copy `.env.example` to `.env`; it is git-ignored). The proxy itself never calls a model.
+Requires Go 1.26+, Node 18+ (only for `npx`-launched servers) and, for the offline steps, a key for any OpenAI-compatible
+API (copy `.env.example` to `.env`; it is git-ignored). The proxy itself never calls a model.
+
+| Variable | Meaning |
+|---|---|
+| `OPENAI_API_KEY` | The API key. |
+| `OPENAI_BASE_URL` | Another OpenAI-compatible endpoint, e.g. `https://api.groq.com/openai/v1` (models such as `openai/gpt-oss-20b`). |
+| `OPENAI_MAX_RETRIES` | SDK retries (default 2). Raise it for providers with tight per-minute limits; a per-day limit stops the run instead. |
 
 ```sh
 go build -o bin/proxy  ./cmd/proxy

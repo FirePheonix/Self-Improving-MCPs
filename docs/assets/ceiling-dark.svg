@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 410" width="1000" height="410" role="img" aria-labelledby="t d">
+  <title id="t">Why strong agents make poor test subjects</title>
+  <desc id="d">A change can only be measured on tasks the agent gets wrong. A strong agent on Browser misses 1 of 57 sealed tasks, so even a perfect change cannot reach the 5 fixed tasks a pass needs. A small agent on File System without descriptions misses 10 of 73, which leaves room to measure.</desc>
+  <style>:root{--ink:#e6edf3;--muted:#9198a1;--faint:#6e7681;--line:#3d444d;--page:#0d1117;--card:#151b23;--body:#0d1117;--glass:#1a2233;--blue:#3987e5;--aqua:#199e70;--violet:#9085e9;--orange:#d95926;--amber:#c98500;--red:#e66767;--green:#0ca30c;--blue-soft:#132338;--aqua-soft:#0f2a21;--violet-soft:#211d3d;--orange-soft:#33190f;--red-soft:#361818;--green-soft:#0f2a0f;--amber-soft:#2e2209;--wood:#a8733e;--metal:#adb5bd;--glint:#e6edf3}
+    text{font-family:"Segoe UI",-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif}
+    .title{font-size:17px;font-weight:650;fill:var(--ink)}
+    .sub{font-size:13px;fill:var(--muted)}
+    .h{font-size:15px;font-weight:650;fill:var(--ink)}
+    .s{font-size:12.5px;fill:var(--muted)}
+    .num{font-size:13px;font-weight:650;fill:var(--ink)}
+    .right{fill:var(--line)}
+    .card{fill:var(--card);stroke:var(--line);stroke-width:1.4}
+    .need{stroke:var(--violet);stroke-width:2;stroke-dasharray:5 4}
+    .lab{font-size:12px;font-weight:650;letter-spacing:1.4px;fill:var(--muted)}
+  </style>
+
+  <text class="title" x="30" y="34">A test can only measure what the agent gets wrong</text>
+  <text class="sub" x="30" y="55">Each square is one sealed task. Grey: the agent already gets it right. Colored: room for a change to help. A pass needs at least 5 fixed, none broken.</text>
+
+  <!-- left card: strong agent -->
+  <rect class="card" x="30" y="78" width="455" height="300" rx="20"/>
+  <text class="lab" x="52" y="108">STRONG AGENT · BROWSER</text>
+  <text class="h" x="52" y="132">gpt-4.1-mini: 56 of 57 right</text>
+  <!-- 57 squares: 19 x 3; one red -->
+  <g id="grid57">
+    <g class="right">
+      <rect x="52" y="152" width="16" height="16" rx="3"/><rect x="72" y="152" width="16" height="16" rx="3"/><rect x="92" y="152" width="16" height="16" rx="3"/><rect x="112" y="152" width="16" height="16" rx="3"/><rect x="132" y="152" width="16" height="16" rx="3"/><rect x="152" y="152" width="16" height="16" rx="3"/><rect x="172" y="152" width="16" height="16" rx="3"/><rect x="192" y="152" width="16" height="16" rx="3"/><rect x="212" y="152" width="16" height="16" rx="3"/><rect x="232" y="152" width="16" height="16" rx="3"/><rect x="252" y="152" width="16" height="16" rx="3"/><rect x="272" y="152" width="16" height="16" rx="3"/><rect x="292" y="152" width="16" height="16" rx="3"/><rect x="312" y="152" width="16" height="16" rx="3"/><rect x="332" y="152" width="16" height="16" rx="3"/><rect x="352" y="152" width="16" height="16" rx="3"/><rect x="372" y="152" width="16" height="16" rx="3"/><rect x="392" y="152" width="16" height="16" rx="3"/><rect x="412" y="152" width="16" height="16" rx="3"/>
+      <rect x="52" y="172" width="16" height="16" rx="3"/><rect x="72" y="172" width="16" height="16" rx="3"/><rect x="92" y="172" width="16" height="16" rx="3"/><rect x="112" y="172" width="16" height="16" rx="3"/><rect x="132" y="172" width="16" height="16" rx="3"/><rect x="152" y="172" width="16" height="16" rx="3"/><rect x="172" y="172" width="16" height="16" rx="3"/><rect x="192" y="172" width="16" height="16" rx="3"/><rect x="212" y="172" width="16" height="16" rx="3"/><rect x="232" y="172" width="16" height="16" rx="3"/><rect x="252" y="172" width="16" height="16" rx="3"/><rect x="272" y="172" width="16" height="16" rx="3"/><rect x="292" y="172" width="16" height="16" rx="3"/><rect x="312" y="172" width="16" height="16" rx="3"/><rect x="332" y="172" width="16" height="16" rx="3"/><rect x="352" y="172" width="16" height="16" rx="3"/><rect x="372" y="172" width="16" height="16" rx="3"/><rect x="392" y="172" width="16" height="16" rx="3"/><rect x="412" y="172" width="16" height="16" rx="3"/>
+      <rect x="52" y="192" width="16" height="16" rx="3"/><rect x="72" y="192" width="16" height="16" rx="3"/><rect x="92" y="192" width="16" height="16" rx="3"/><rect x="112" y="192" width="16" height="16" rx="3"/><rect x="132" y="192" width="16" height="16" rx="3"/><rect x="152" y="192" width="16" height="16" rx="3"/><rect x="172" y="192" width="16" height="16" rx="3"/><rect x="192" y="192" width="16" height="16" rx="3"/><rect x="212" y="192" width="16" height="16" rx="3"/><rect x="232" y="192" width="16" height="16" rx="3"/><rect x="252" y="192" width="16" height="16" rx="3"/><rect x="272" y="192" width="16" height="16" rx="3"/><rect x="292" y="192" width="16" height="16" rx="3"/><rect x="312" y="192" width="16" height="16" rx="3"/><rect x="332" y="192" width="16" height="16" rx="3"/><rect x="352" y="192" width="16" height="16" rx="3"/><rect x="372" y="192" width="16" height="16" rx="3"/><rect x="392" y="192" width="16" height="16" rx="3"/>
+    </g>
+    <rect x="412" y="192" width="16" height="16" rx="3" style="fill:var(--red)"/>
+  </g>
+  <!-- headroom bar -->
+  <text class="s" x="52" y="244">room to improve vs what a pass needs</text>
+  <rect x="52" y="254" width="20" height="22" rx="4" style="fill:var(--red)"/>
+  <text class="num" x="82" y="270">1</text>
+  <line class="need" x1="152" y1="248" x2="152" y2="282"/>
+  <text class="s" x="160" y="270" style="fill:var(--violet)">pass needs 5</text>
+  <text class="h" x="52" y="316" style="fill:var(--red)">The test is blind.</text>
+  <text class="s" x="52" y="338">Even a perfect change can fix only 1 task: every verdict is</text>
+  <text class="s" x="52" y="356">"inconclusive", whatever the change does.</text>
+
+  <!-- right card: small agent -->
+  <rect class="card" x="515" y="78" width="455" height="300" rx="20"/>
+  <text class="lab" x="537" y="108">SMALL AGENT · FILE SYSTEM, NO DESCRIPTIONS</text>
+  <text class="h" x="537" y="132">gpt-oss-20b: 63 of 73 right</text>
+  <g class="right">
+    <rect x="537" y="152" width="16" height="16" rx="3"/><rect x="557" y="152" width="16" height="16" rx="3"/><rect x="577" y="152" width="16" height="16" rx="3"/><rect x="597" y="152" width="16" height="16" rx="3"/><rect x="617" y="152" width="16" height="16" rx="3"/><rect x="637" y="152" width="16" height="16" rx="3"/><rect x="657" y="152" width="16" height="16" rx="3"/><rect x="677" y="152" width="16" height="16" rx="3"/><rect x="697" y="152" width="16" height="16" rx="3"/><rect x="717" y="152" width="16" height="16" rx="3"/><rect x="737" y="152" width="16" height="16" rx="3"/><rect x="757" y="152" width="16" height="16" rx="3"/><rect x="777" y="152" width="16" height="16" rx="3"/><rect x="797" y="152" width="16" height="16" rx="3"/><rect x="817" y="152" width="16" height="16" rx="3"/><rect x="837" y="152" width="16" height="16" rx="3"/><rect x="857" y="152" width="16" height="16" rx="3"/><rect x="877" y="152" width="16" height="16" rx="3"/><rect x="897" y="152" width="16" height="16" rx="3"/>
+    <rect x="537" y="172" width="16" height="16" rx="3"/><rect x="557" y="172" width="16" height="16" rx="3"/><rect x="577" y="172" width="16" height="16" rx="3"/><rect x="597" y="172" width="16" height="16" rx="3"/><rect x="617" y="172" width="16" height="16" rx="3"/><rect x="637" y="172" width="16" height="16" rx="3"/><rect x="657" y="172" width="16" height="16" rx="3"/><rect x="677" y="172" width="16" height="16" rx="3"/><rect x="697" y="172" width="16" height="16" rx="3"/><rect x="717" y="172" width="16" height="16" rx="3"/><rect x="737" y="172" width="16" height="16" rx="3"/><rect x="757" y="172" width="16" height="16" rx="3"/><rect x="777" y="172" width="16" height="16" rx="3"/><rect x="797" y="172" width="16" height="16" rx="3"/><rect x="817" y="172" width="16" height="16" rx="3"/><rect x="837" y="172" width="16" height="16" rx="3"/><rect x="857" y="172" width="16" height="16" rx="3"/><rect x="877" y="172" width="16" height="16" rx="3"/><rect x="897" y="172" width="16" height="16" rx="3"/>
+    <rect x="537" y="192" width="16" height="16" rx="3"/><rect x="557" y="192" width="16" height="16" rx="3"/><rect x="577" y="192" width="16" height="16" rx="3"/><rect x="597" y="192" width="16" height="16" rx="3"/><rect x="617" y="192" width="16" height="16" rx="3"/><rect x="637" y="192" width="16" height="16" rx="3"/><rect x="657" y="192" width="16" height="16" rx="3"/><rect x="677" y="192" width="16" height="16" rx="3"/><rect x="697" y="192" width="16" height="16" rx="3"/><rect x="717" y="192" width="16" height="16" rx="3"/><rect x="737" y="192" width="16" height="16" rx="3"/><rect x="757" y="192" width="16" height="16" rx="3"/><rect x="777" y="192" width="16" height="16" rx="3"/><rect x="797" y="192" width="16" height="16" rx="3"/><rect x="817" y="192" width="16" height="16" rx="3"/><rect x="837" y="192" width="16" height="16" rx="3"/><rect x="857" y="192" width="16" height="16" rx="3"/><rect x="877" y="192" width="16" height="16" rx="3"/><rect x="897" y="192" width="16" height="16" rx="3"/>
+    <rect x="537" y="212" width="16" height="16" rx="3"/><rect x="557" y="212" width="16" height="16" rx="3"/><rect x="577" y="212" width="16" height="16" rx="3"/><rect x="597" y="212" width="16" height="16" rx="3"/><rect x="617" y="212" width="16" height="16" rx="3"/><rect x="637" y="212" width="16" height="16" rx="3"/>
+  </g>
+  <g style="fill:var(--aqua)">
+    <rect x="657" y="212" width="16" height="16" rx="3"/><rect x="677" y="212" width="16" height="16" rx="3"/><rect x="697" y="212" width="16" height="16" rx="3"/><rect x="717" y="212" width="16" height="16" rx="3"/><rect x="737" y="212" width="16" height="16" rx="3"/><rect x="757" y="212" width="16" height="16" rx="3"/><rect x="777" y="212" width="16" height="16" rx="3"/><rect x="797" y="212" width="16" height="16" rx="3"/><rect x="817" y="212" width="16" height="16" rx="3"/><rect x="837" y="212" width="16" height="16" rx="3"/>
+  </g>
+  <text class="s" x="537" y="264">room to improve vs what a pass needs</text>
+  <rect x="537" y="274" width="200" height="22" rx="4" style="fill:var(--aqua)"/>
+  <text class="num" x="747" y="290">10</text>
+  <line class="need" x1="637" y1="268" x2="637" y2="302"/>
+  <text class="s" x="645" y="318" style="fill:var(--violet)">pass needs 5</text>
+  <text class="h" x="537" y="340" style="fill:var(--aqua)">The test can see a real change.</text>
+  <text class="s" x="537" y="358">Real descriptions take it from 63 to 71: there is a gap to recover.</text>
+</svg>

@@ -74,22 +74,39 @@ is decisive. A route that renames a call into a tool its arguments do not fit is
 </p>
 
 Tested on five domains of [MCPToolBench++](https://huggingface.co/datasets/MCPToolBench/MCPToolBenchPP) (Browser, File System,
-Map, Pay, Search) with `gpt-4.1-mini` as the agent, counting a pick correct only when the tool is right (or an equivalent) **and**
-its arguments are valid:
+Map, Pay, Search), counting a pick correct only when the tool is right (or an equivalent) **and** its arguments are valid:
 
 - **The gate says no when it should:** a deliberately harmful change failed in every domain where one could be built, with exactly
   the predicted number of broken tasks, and an empty change has shown no false difference since the re-voting rule went in.
-- **The first real improvement:** for a server shipped without descriptions, the loop learned descriptions that fixed 17 sealed
-  tasks and broke none, better than the server's own descriptions (15 fixed, 2 broken).
+- **The first real improvement** (`gpt-4.1-mini`, Map, one seed): for a server shipped without descriptions, the loop learned
+  descriptions that fixed 17 sealed tasks and broke none, better than the server's own descriptions (15 fixed, 2 broken).
 - **Where servers already document their tools well, it found nothing to ship,** and the gate correctly refused small gains that
   did not hold up. An earlier headline gain of +8.6 points was withdrawn when we found it came from a route that could not
   actually run.
 
-One model and one seed for the positive result so far. [How we tested, and every caveat →](docs/EVALUATION.md)
+- **Whether descriptions matter depends on the agent.** `gpt-4.1-mini` scored the same or better *without* any descriptions on
+  four of five domains. `gpt-oss-20b` (our primary testbed, on Groq) drops from 71 to 63 of 73 on File System, `gpt-oss-120b`
+  from 69 to 63.
+
+### Why the primary testbed is a small agent
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/ceiling-dark.svg">
+    <img alt="A strong agent misses 1 of 57 tasks, so no change can reach the 5 fixed a pass needs; a small agent without descriptions misses 10 of 73." src="docs/assets/ceiling-light.svg" width="100%">
+  </picture>
+</p>
+
+A test can only measure what the agent gets wrong. Strong models leave one or two mistakes per domain, mostly coin-flip tasks
+and label noise that change with every model release, so results measured on them are ephemeral and every verdict is
+`inconclusive`. Small open models are cheap to run many times, depend on the tool interface, and are what many deployments use.
+The primary testbed is `gpt-oss-20b` as the agent with `gpt-oss-120b` as the improver, on Groq.
+[How we tested, every result and every caveat →](docs/EVALUATION.md)
 
 ## Quick start
 
-Requires Go 1.26+, Node (for `npx` servers) and an `OPENAI_API_KEY` for the offline steps (copy `.env.example` to `.env`).
+Requires Go 1.26+, Node (for `npx` servers) and, for the offline steps, a key for any OpenAI-compatible API: `OPENAI_API_KEY`,
+plus `OPENAI_BASE_URL` for providers such as Groq (copy `.env.example` to `.env`).
 
 ```sh
 go build -o bin/proxy ./cmd/proxy && go build -o bin/evolve ./cmd/evolve

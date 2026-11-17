@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 440" width="1000" height="440" role="img" aria-labelledby="t d">
+  <title id="t">How much tool descriptions matter, by agent</title>
+  <desc id="d">Sealed tasks right without descriptions and with the real descriptions. gpt-oss-20b File System 63 to 71 of 73. gpt-oss-120b File System 63 to 69. gpt-4.1-mini File System 64 to 64; Map 105 to 121 of 150; Pay 89 to 86 of 93; Search 54 to 53 of 55; Browser 56 to 56 of 57.</desc>
+  <style>:root{--ink:#e6edf3;--muted:#9198a1;--faint:#6e7681;--line:#3d444d;--page:#0d1117;--card:#151b23;--body:#0d1117;--glass:#1a2233;--blue:#3987e5;--aqua:#199e70;--violet:#9085e9;--orange:#d95926;--amber:#c98500;--red:#e66767;--green:#0ca30c;--blue-soft:#132338;--aqua-soft:#0f2a21;--violet-soft:#211d3d;--orange-soft:#33190f;--red-soft:#361818;--green-soft:#0f2a0f;--amber-soft:#2e2209;--wood:#a8733e;--metal:#adb5bd;--glint:#e6edf3}
+    text{font-family:"Segoe UI",-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif}
+    .title{font-size:17px;font-weight:650;fill:var(--ink)}
+    .sub{font-size:13px;fill:var(--muted)}
+    .row{font-size:14.5px;font-weight:600;fill:var(--ink)}
+    .rows{font-size:12.5px;fill:var(--muted)}
+    .tick{font-size:12px;fill:var(--muted)}
+    .val{font-size:13px;font-weight:650;fill:var(--ink)}
+    .grid{stroke:var(--line);stroke-width:1}
+    .before{fill:var(--page);stroke:var(--faint);stroke-width:2.2}
+    .after{fill:var(--violet)}
+    .link{stroke:var(--violet);stroke-width:2.4}
+    .sep{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
+    .lab{font-size:11.5px;font-weight:650;letter-spacing:1.4px;fill:var(--muted)}
+    .note{font-size:12px;fill:var(--muted);font-style:italic}
+  </style>
+
+  <text class="title" x="30" y="34">How much do tool descriptions matter? Depends on the agent</text>
+  <text class="sub" x="30" y="55">Sealed tasks right: hollow = descriptions removed, filled = the server's real descriptions · seed 2026 · arguments validated</text>
+
+  <!-- grid: x = 330 + (pct - 65) * 13.143 -->
+  <line class="grid" x1="395.7" y1="76" x2="395.7" y2="378"/><text class="tick" x="395.7" y="396" text-anchor="middle">70%</text>
+  <line class="grid" x1="527.1" y1="76" x2="527.1" y2="378"/><text class="tick" x="527.1" y="396" text-anchor="middle">80%</text>
+  <line class="grid" x1="658.6" y1="76" x2="658.6" y2="378"/><text class="tick" x="658.6" y="396" text-anchor="middle">90%</text>
+  <line class="grid" x1="790" y1="76" x2="790" y2="378"/><text class="tick" x="790" y="396" text-anchor="middle">100%</text>
+
+  <text class="lab" x="30" y="86">GPT-OSS (GROQ) · PRIMARY TESTBED</text>
+  <!-- 20b -->
+  <text class="row" x="30" y="117">gpt-oss-20b</text><text class="rows" x="135" y="117">File System</text>
+  <line class="link" x1="616" y1="112" x2="748" y2="112"/>
+  <circle class="before" cx="609.9" cy="112" r="6"/><circle class="after" cx="754.5" cy="112" r="6.5"/>
+  <text class="val" x="830" y="117">+8</text><text class="rows" x="856" y="117">63 → 71 of 73</text>
+  <!-- 120b -->
+  <text class="row" x="30" y="155">gpt-oss-120b</text><text class="rows" x="135" y="155">File System</text>
+  <line class="link" x1="616" y1="150" x2="711" y2="150"/>
+  <circle class="before" cx="609.9" cy="150" r="6"/><circle class="after" cx="717.7" cy="150" r="6.5"/>
+  <text class="val" x="830" y="155">+6</text><text class="rows" x="856" y="155">63 → 69 of 73</text>
+
+  <line class="sep" x1="30" y1="176" x2="970" y2="176"/>
+  <text class="lab" x="30" y="198">GPT-4.1-MINI (OPENAI) · EARLIER RUNS</text>
+  <!-- mini FS -->
+  <text class="row" x="30" y="229">gpt-4.1-mini</text><text class="rows" x="135" y="229">File System</text>
+  <circle class="after" cx="628.3" cy="224" r="6.5"/><circle class="before" cx="628.3" cy="224" r="3" style="stroke-width:0;fill:var(--page)"/>
+  <text class="val" x="830" y="229">0</text><text class="rows" x="856" y="229">64 → 64 of 73</text>
+  <!-- Map -->
+  <text class="row" x="30" y="265">gpt-4.1-mini</text><text class="rows" x="135" y="265">Map</text>
+  <line class="link" x1="402" y1="260" x2="530" y2="260"/>
+  <circle class="before" cx="395.7" cy="260" r="6"/><circle class="after" cx="536.3" cy="260" r="6.5"/>
+  <text class="val" x="830" y="265">+16</text><text class="rows" x="864" y="265">105 → 121 of 150</text>
+  <!-- Pay -->
+  <text class="row" x="30" y="301">gpt-4.1-mini</text><text class="rows" x="135" y="301">Pay</text>
+  <line class="link" x1="727" y1="296" x2="698" y2="296"/>
+  <circle class="before" cx="733.5" cy="296" r="6"/><circle class="after" cx="691.4" cy="296" r="6.5"/>
+  <text class="val" x="830" y="301">−3</text><text class="rows" x="856" y="301">89 → 86 of 93</text>
+  <!-- Search -->
+  <text class="row" x="30" y="337">gpt-4.1-mini</text><text class="rows" x="135" y="337">Search</text>
+  <line class="link" x1="760" y1="332" x2="749" y2="332"/>
+  <circle class="before" cx="766.3" cy="332" r="6"/><circle class="after" cx="742.7" cy="332" r="6.5"/>
+  <text class="val" x="830" y="337">−1</text><text class="rows" x="856" y="337">54 → 53 of 55</text>
+  <!-- Browser -->
+  <text class="row" x="30" y="373">gpt-4.1-mini</text><text class="rows" x="135" y="373">Browser</text>
+  <circle class="after" cx="766.3" cy="368" r="6.5"/><circle class="before" cx="766.3" cy="368" r="3" style="stroke-width:0;fill:var(--page)"/>
+  <text class="val" x="830" y="373">0</text><text class="rows" x="856" y="373">56 → 56 of 57</text>
+
+  <text class="note" x="30" y="428">Both gpt-oss agents lean on descriptions; gpt-4.1-mini chooses mostly from names and schemas, except on Map (32 overlapping tools).</text>
+</svg>

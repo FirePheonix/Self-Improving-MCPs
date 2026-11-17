@@ -40,9 +40,55 @@ Per domain, tasks are shuffled with a fixed seed and split 70/30 into **DEV** (t
 A DEV task whose normalized text also appears in SEALED is dropped, because the benchmark repeats some requests. Each decision
 records the SHA-256 of the sealed set.
 
-### The agent
-`gpt-4.1-mini` at temperature 0 stands in for an agent. It sees the tool list as the proxy would serve it (`mcp.VisibleTools`) and
-returns a tool call with arguments, through the same code path the product uses.
+### The agent: a small open model is the primary testbed
+The agent under test sees the tool list as the proxy would serve it (`mcp.VisibleTools`) and returns a tool call with arguments,
+at temperature 0, through the same code path the product uses. Any OpenAI-compatible API works (`OPENAI_BASE_URL`).
+
+| Role | Primary testbed (Groq) | Earlier runs (OpenAI) |
+|---|---|---|
+| Agent under test | `openai/gpt-oss-20b` | `gpt-4.1-mini` |
+| Improver and retention judge | `openai/gpt-oss-120b` | `gpt-4.1-mini` |
+
+`sh scripts/bench/run-all.sh` uses the Groq setup by default (`GROQ_API_KEY` in `.env`); `PROVIDER=openai` reproduces the earlier
+runs. The improver is deliberately a larger model than the agent: we are testing whether better descriptions help a given agent,
+not whether that agent can write them.
+
+### Why stronger agents make poor test subjects
+Results measured on a strong agent are ephemeral: they say little about the method and expire with the next model release.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/ceiling-dark.svg">
+    <img alt="A strong agent misses 1 of 57 tasks, so no change can reach the 5 fixed a pass needs; a small agent without descriptions misses 10 of 73." src="assets/ceiling-light.svg" width="100%">
+  </picture>
+</p>
+
+1. **No room, no evidence.** A change can only be measured on tasks the agent gets wrong, and a pass needs at least 5 fixed with
+   none broken. `gpt-4.1-mini` misses 1 of 57 Browser and 2 of 55 Search tasks: every verdict there is `inconclusive` whatever the
+   change does. A Claude-class selector solved 72 of 73 File System tasks, and 73 of 73 when told to read only the first sentence
+   of each description. Even `gpt-oss-120b` with the real descriptions misses only 4 of 73: below the 5 a pass needs. Without
+   descriptions both gpt-oss agents miss 10, which is the room the loop needs.
+2. **Some agents barely read descriptions.** With every description removed, `gpt-4.1-mini` scored the same on File System, Browser
+   and Search, and better on Pay: it chooses from tool names and schemas. A description improvement cannot show up in an agent
+   that does not use descriptions. Both gpt-oss agents do use them: without descriptions `gpt-oss-20b` loses 8 of 73 File System
+   tasks and `gpt-oss-120b` loses 6. This is a property of the model, not only of its size, which is one more reason a result on one
+   strong model does not carry over.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/models-dark.svg">
+    <img alt="Sealed tasks right without and with descriptions, by agent and domain." src="assets/models-light.svg" width="100%">
+  </picture>
+</p>
+3. **Their few mistakes are noise.** What a strong model still gets wrong is a handful of borderline tasks it answers
+   inconsistently from run to run (the reason for the gate's re-voting), plus label artefacts. Optimising against those learns the
+   benchmark, not the tools, and the set changes with every model version.
+4. **Small agents are where descriptions matter in production.** Cost, latency and self-hosting push real deployments toward small
+   and open models, and these depend on the tool interface. That is the population this product is for.
+5. **Cost decides how many runs you can afford.** Credible results need several seeds and controls. A small hosted model makes that
+   affordable; a frontier model makes one run the whole budget.
+
+The gate in production should still use a selector that resembles *your* agent; the testbed choice is about measuring the method.
 
 ### What counts as correct
 We report three levels for every baseline, because the gap between them turned out to matter more than anything else:
@@ -77,9 +123,29 @@ say `pass` at all.
 
 ## Results
 
-All runs: `gpt-4.1-mini`, seed 2026, 70/30 split. Logs in `data/bench-runs/` (not committed; regenerate with the script).
+All runs: seed 2026, 70/30 split, temperature 0. Logs in `data/bench-runs/` (not committed; regenerate with the script).
 
-### Servers with their real descriptions
+### Primary testbed: gpt-oss on Groq (File System)
+
+Sealed baseline, 73 tasks, executable correctness:
+
+| Agent | Real descriptions | No descriptions | Descriptions worth | Headroom with / without |
+|---|---|---|---|---|
+| `openai/gpt-oss-20b` | **71 / 73** | **63 / 73** | 8 tasks | 2 / 10 |
+| `openai/gpt-oss-120b` | 69 / 73 | 63 / 73 | 6 tasks | 4 / 10 |
+| `gpt-4.1-mini` (for comparison) | 64 / 73 | 64 / 73 | 0 | 9 / 9 |
+
+- With their real descriptions, both gpt-oss agents leave fewer than 5 sealed mistakes, so no change can pass there (the ceiling
+  above). Without descriptions both miss 10, and the real descriptions recover most of it: a gap with a known answer, exactly the
+  setting where the loop should help.
+- **The full loop on this setting has not finished yet.** A reduced run (200 tasks, 60 sealed, 2 improver rounds, controls skipped
+  to save calls) measured the sealed baseline at 54 / 60 and was then stopped, as designed, by Groq's free-tier daily token cap
+  (about 200k tokens per model per day) during the improver's first DEV pass. The full run needs roughly 900k agent tokens: one run
+  on a paid tier, or several days on the free one. Command:
+  `DOCS=none DOMAINS=file_system sh scripts/bench/run-all.sh 2026`.
+- The bigger model is not better at choosing: `gpt-oss-120b` scores below `gpt-oss-20b` with the real descriptions (69 vs 71).
+
+### gpt-4.1-mini, servers with their real descriptions
 
 | Domain | Sealed | Correct: exact / equivalent / executable | Improver on DEV | Verdict on SEALED | Harmful | Empty |
 |---|---|---|---|---|---|---|
@@ -95,7 +161,7 @@ next table. ² Pay's tools share no argument shapes, so every route is rejected 
 **Counting equivalents changes the picture.** Most "mistakes" on Map, Browser and Search were an equivalent tool on a sibling server.
 With equivalents counted, Browser and Search have 1–2 sealed mistakes left: nothing to improve, and a pass is impossible.
 
-### Servers without descriptions (`-docs none`)
+### gpt-4.1-mini, servers without descriptions (`-docs none`)
 
 | Domain | Baseline | Headroom | Improver on DEV | Candidate on SEALED | Harmful (predicted) | Empty | Real docs restored |
 |---|---|---|---|---|---|---|---|
@@ -148,8 +214,11 @@ The evaluation changed several times because it was wrong. Each correction is a 
 
 ## Threats to validity
 
-- **One positive result.** One domain, one seed, one model. A second seed for Map was blocked by API credits; it is the next run.
-- **The agent is a stand-in.** `gpt-4.1-mini` choosing from a list is not your production agent in a multi-step session.
+- **One positive result.** One domain, one seed, one model (`gpt-4.1-mini`, Map). The primary-testbed loop (gpt-oss, File System
+  without descriptions) has not completed yet, and a second Map seed was blocked by API credits. These are the next runs.
+- **The agent is a stand-in.** A model choosing from a list is not your production agent in a multi-step session.
+- **Free-tier limits shape what can run.** Groq's free tier allows about 1,000 requests and 200k tokens per model per day, enough
+  for baseline probes, not for a full loop in one day.
 - **Benchmark labels, not traffic.** Labels can be wrong (see the Map geocoding group), and real users phrase things differently.
   `evolve golden draft` + human approval is the intended path for real servers; drafted tasks are easier than real queries.
 - **Selection is not success.** Except for File System, calls were validated against schemas, not executed.
@@ -163,13 +232,18 @@ The evaluation changed several times because it was wrong. Each correction is a 
 git clone https://huggingface.co/datasets/MCPToolBench/MCPToolBenchPP ../evaluation/MCPToolBenchPP
 python scripts/bench/setup_workspace.py ../evaluation/workspace/test_project_root
 
-# 2. all five domains, real descriptions (about 30 minutes with a funded OpenAI key)
-sh scripts/bench/run-all.sh 2026
+# 2. primary testbed (Groq, gpt-oss-20b agent, gpt-oss-120b improver): put GROQ_API_KEY in .env
+BASELINE_ONLY=1 DOMAINS=file_system sh scripts/bench/run-all.sh 2026            # cheap probe: baseline and headroom
+BASELINE_ONLY=1 DOMAINS=file_system DOCS=none sh scripts/bench/run-all.sh 2026
+DOCS=none DOMAINS=file_system sh scripts/bench/run-all.sh 2026                  # the full loop (~900k agent tokens)
 
-# 3. the no-descriptions simulation, or one domain on another seed
-DOCS=none sh scripts/bench/run-all.sh 2026
-DOCS=none DOMAINS=map sh scripts/bench/run-all.sh 7
+# 3. the earlier OpenAI runs: all five domains, with and without descriptions, or another seed
+PROVIDER=openai sh scripts/bench/run-all.sh 2026
+PROVIDER=openai DOCS=none sh scripts/bench/run-all.sh 2026
+PROVIDER=openai DOCS=none DOMAINS=map sh scripts/bench/run-all.sh 7
 ```
+
+On a tight quota, `CONCURRENCY`, `LIMIT`, `ROUNDS` and `SKIP_CONTROLS=1` trade breadth for calls (see the script header).
 
 Each domain writes a log with human-readable lines and one `BENCH_RESULT` JSON line (verdicts, counts, the candidate overlay, the
 mistake groups, every improver round) to a new `data/bench-runs/<seed>-<docs>-<timestamp>/` folder, so earlier evidence is never

@@ -510,3 +510,30 @@ patched `read_text_file`, while the agent was actually picking `read_file`: the 
 - `go vet` and `go test -race ./...` in Docker (`golang:1.26`): all packages passed on the code before the pruning and
   mistake-recording change. The rerun on the final code was stopped for low memory on the host; the final code passes `go vet` and
   `go test ./...` natively (no race detector on this Windows host). Rerun the Docker command above when memory allows.
+
+## Round 5: a small open agent as the primary testbed (Groq, 2026-11-18)
+
+**Why.** On `gpt-4.1-mini` almost every domain left fewer than 5 sealed mistakes, and removing descriptions changed nothing on four
+of five domains, so most tests could only say `inconclusive`. A test can only measure what the agent gets wrong. The primary
+testbed is now `openai/gpt-oss-20b` as the agent and `openai/gpt-oss-120b` as the improver, on Groq (`PROVIDER=groq`, the default
+in `scripts/bench/run-all.sh`). Llama 3.1 8B was the first choice; it is not offered on this Groq account (`model_not_found`).
+
+**Harness changes** (each tested): any OpenAI-compatible provider via `OPENAI_BASE_URL`; `OPENAI_MAX_RETRIES` so per-minute
+limits are retried as the server's Retry-After asks; a per-day limit and an unknown model are fatal and stop the run (Groq answers
+429 `rate_limit_exceeded` for both "wait 5 s" and "come back tomorrow"); `-proposer-model` separates the improver from the agent;
+`-baseline-only` probes the sealed baseline and headroom cheaply; `-skip-controls` saves calls on a tight quota.
+
+**Probes (File System, 73 sealed tasks, seed 2026):**
+
+| Agent | Real descriptions | No descriptions |
+|---|---|---|
+| `gpt-oss-20b` | 71 | 63 |
+| `gpt-oss-120b` | 69 | 63 |
+| `gpt-4.1-mini` (Round 4) | 64 | 64 |
+
+**Full loop, not finished.** `DOCS=none`, 200 tasks (60 sealed), 2 rounds, controls skipped: sealed baseline 54 / 60, then the run
+stopped during the improver's first DEV pass on Groq's free-tier daily token cap (about 200k tokens per model per day; the response
+headers only show the per-minute budget). The stop is the intended behaviour. The full run needs roughly 900k agent tokens.
+
+**Also found.** Editing `run-all.sh` while it was running broke the running copy (`sh` reads scripts incrementally): the first probe's
+result had already been written and is valid, the wrapper then failed with "unexpected EOF". Do not edit the runner during a run.
