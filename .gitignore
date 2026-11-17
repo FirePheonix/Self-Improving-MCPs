@@ -28,3 +28,14 @@ data/
 *.swp
 .DS_Store
 Thumbs.db
+
+# LaTeX build files (paper/main.pdf is committed)
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/figures/.*.html
