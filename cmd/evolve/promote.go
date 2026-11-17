@@ -59,9 +59,29 @@ func runRollback(ctx context.Context) error {
 		return err
 	}
 	if *versionID == "" {
-		return fmt.Errorf("-version is required")
+		return fmt.Errorf("-version is required (a version id, or \"none\" for the baseline upstream)")
+	}
+	if *versionID == "none" {
+		return clearActive(*cfgPath)
 	}
 	return promoteVersion(*cfgPath, *versionID)
+}
+
+func clearActive(cfgPath string) error {
+	cfg, err := loadEvolveConfig(cfgPath)
+	if err != nil {
+		return err
+	}
+	db, err := openStore(cfg.DataDir)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	if err := db.ClearActiveVersion(); err != nil {
+		return err
+	}
+	fmt.Println("active version -> none (baseline upstream; a running proxy picks this up within its reload interval)")
+	return nil
 }
 
 func runVersions(ctx context.Context) error {
@@ -114,7 +134,7 @@ func promoteVersion(cfgPath, versionID string) error {
 	if err := db.SetActiveVersion(versionID); err != nil {
 		return err
 	}
-	fmt.Printf("active version -> %s (restart proxy to load)\n", versionID)
+	fmt.Printf("active version -> %s (a running proxy picks this up within its reload interval)\n", versionID)
 	return nil
 }
 
