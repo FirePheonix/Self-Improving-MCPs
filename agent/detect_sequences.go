@@ -33,7 +33,16 @@ func DetectFrequentSequences(calls []store.ToolCall) []DetectedFinding {
 			items = append(items, item{bg, n})
 		}
 	}
-	sort.Slice(items, func(i, j int) bool { return items[i].count > items[j].count })
+	// Deterministic order: count desc, then names asc (map iteration order is random).
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].count != items[j].count {
+			return items[i].count > items[j].count
+		}
+		if items[i].bg.a != items[j].bg.a {
+			return items[i].bg.a < items[j].bg.a
+		}
+		return items[i].bg.b < items[j].bg.b
+	})
 
 	var out []DetectedFinding
 	for _, it := range items {

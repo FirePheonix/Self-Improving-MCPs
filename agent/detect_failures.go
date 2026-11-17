@@ -3,6 +3,7 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"self-improving-mcp/store"
 )
@@ -18,8 +19,21 @@ func DetectRepeatedFailures(calls []store.ToolCall) []DetectedFinding {
 		k := key{c.ToolName, c.ArgsHash}
 		counts[k] = append(counts[k], c.ID)
 	}
+	// Deterministic order: sort keys (map iteration order is random).
+	keys := make([]key, 0, len(counts))
+	for k := range counts {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i].tool != keys[j].tool {
+			return keys[i].tool < keys[j].tool
+		}
+		return keys[i].hash < keys[j].hash
+	})
+
 	var out []DetectedFinding
-	for k, ids := range counts {
+	for _, k := range keys {
+		ids := counts[k]
 		if len(ids) < 3 {
 			continue
 		}

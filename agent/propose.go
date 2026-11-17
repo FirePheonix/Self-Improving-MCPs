@@ -33,8 +33,14 @@ func ProposeOverlays(ctx context.Context, client *Client, db *store.DB, findings
 	system := `You propose MCP proxy overlays from trajectory findings.
 Reply with a single JSON object only matching:
 {"tool_patches":{"toolName":{"description":"..."}},"routing":[{"from_tool":"a","to_tool":"b"}],"cache":[{"tool_name":"x","ttl_seconds":60}],"composed_tools":{"name":{"description":"...","steps":[{"tool":"a","args":{}}]}}}
-Only include fields that help. Prefer better descriptions and composed tools for frequent sequences.`
-	text, err := client.Complete(ctx, client.Reason, system, string(raw))
+Rules:
+- Prefer better tool descriptions for confused tools.
+- When you rewrite a description, keep every sentence that tells an agent how to use the tool after choosing it (result format, limits, side effects, failure behaviour, preconditions). Add the disambiguation; do not replace the original text with a shorter summary. A review step rejects descriptions that drop such sentences.
+- Routing is dangerous: ONLY add from_tool→to_tool when a poor_tool_selection finding explicitly says the agent chose from_tool but expected to_tool. Never invent other routes.
+- Do not remap unrelated list/read tools.
+- Composed tools only for clearly repeated sequences.
+- Keep the overlay small.`
+	text, err := client.CompleteJSON(ctx, client.Reason, system, string(raw))
 	if err != nil {
 		return nil, err
 	}
