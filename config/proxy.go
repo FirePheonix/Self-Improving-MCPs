@@ -10,6 +10,9 @@ type UpstreamConfig struct {
 	URL string `yaml:"url"`
 	// Env is extra environment for the upstream process.
 	Env map[string]string `yaml:"env"`
+	// Dir is the upstream process's working directory (default: the proxy's). Servers that resolve
+	// relative paths, like the filesystem server, resolve them against it.
+	Dir string `yaml:"dir"`
 }
 
 // ProxyConfig is the hot-path proxy settings.
@@ -22,4 +25,10 @@ type ProxyConfig struct {
 	RedactPayloads bool `yaml:"redact_payloads"`
 	// CapturePayloadsInSpans puts args/results on OTel spans (default off).
 	CapturePayloadsInSpans bool `yaml:"capture_payloads_in_spans"`
+	// StatusAddr, when set (e.g. "127.0.0.1:8787"), serves /health and /overlay over HTTP.
+	// Empty disables it. Bind to loopback unless you front it with auth.
+	StatusAddr string `yaml:"status_addr"`
+	// ReloadIntervalSeconds is how often the proxy checks for a newly promoted overlay and
+	// swaps it in without a restart. 0 uses the default (5); negative disables hot reload.
+	ReloadIntervalSeconds int `yaml:"reload_interval_seconds"`
 }

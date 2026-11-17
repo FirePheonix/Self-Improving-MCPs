@@ -15,5 +15,8 @@ func ApplyEnvEvolve(cfg EvolveConfig) EvolveConfig {
 	if v := os.Getenv("DATA_DIR"); v != "" {
 		cfg.DataDir = v
 	}
+	if v := os.Getenv("EVOLVE_WEBHOOK_URL"); v != "" {
+		cfg.Notify.WebhookURL = v
+	}
 	return cfg
 }

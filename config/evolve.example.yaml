@@ -7,4 +7,26 @@ models:
 promote:
   max_error_rate_increase: 0.02
   max_latency_p95_increase: 0.10
-  require_efficiency_win: true
+  # Off by default: a small latency or call-count difference is noise, not proof of better selection.
+  # Selection quality is judged by the gate below.
+  require_efficiency_win: false
+
+# Selection gate: decides whether a candidate overlay may ship, on SEALED labeled tasks the
+# improver never sees. Verdicts: pass (may ship), fail (discard), inconclusive (do not ship, notify).
+# Without golden_path, `evolve run -auto-promote` is refused.
+gate:
+  golden_path: ""        # golden set json: {"tasks":[{"id","query","expected_tool","split":"dev|sealed"}]}
+  # model: gpt-4.1-mini  # the agent under test (default: models.reason)
+  # concurrency: 8
+  # min_sealed: 30       # smallest sealed set the gate will judge on
+  # alpha: 0.05          # one-sided significance for the improvement
+  # max_broken: 0        # previously-correct sealed tasks a candidate may break
+  # max_selector_error_rate: 0.05
+  # confirm_votes: 8   # extra votes per arm on tasks where baseline and candidate disagree (<0 disables)
+  # retention_votes: 3   # judge runs that decide whether a new description dropped information agents need (<0 disables)
+  # accept_info_loss: false  # ship a pass even if descriptions drop information (only after a person read what is dropped)
+
+# Optional: also announce every gate outcome (counts only, Slack-compatible). Prefer the env var
+# EVOLVE_WEBHOOK_URL over writing the secret URL here.
+notify:
+  webhook_url: ""
