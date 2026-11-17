@@ -45,3 +45,21 @@ func TestClassifyReadsTheStructuredCodeNotTheMessage(t *testing.T) {
 		t.Fatal("401 is fatal")
 	}
 }
+
+// Groq-style answers: a per-minute limit is retried, a per-day limit stops the run, as does an unknown model.
+func TestDailyQuotaAndUnknownModelAreFatal(t *testing.T) {
+	perMin := fmt.Errorf(`429 Too Many Requests {"error":{"message":"Rate limit reached for model in organization on tokens per minute (TPM): Limit 8000, Used 7900","code":"rate_limit_exceeded"}}`)
+	perDay := fmt.Errorf(`429 Too Many Requests {"error":{"message":"Rate limit reached for model in organization on requests per day (RPD): Limit 1000, Used 1000","code":"rate_limit_exceeded"}}`)
+	noModel := fmt.Errorf(`404 Not Found {"error":{"code":"model_not_found"}}`)
+	if isFatal(classify(perMin)) {
+		t.Fatal("a per-minute limit must be retried, not stop the run")
+	}
+	if !isFatal(classify(perDay)) || !isFatal(classify(noModel)) {
+		t.Fatal("a daily quota or an unknown model must stop the run")
+	}
+}
+
+func isFatal(err error) bool {
+	f, ok := err.(interface{ Fatal() bool })
+	return ok && f.Fatal()
+}

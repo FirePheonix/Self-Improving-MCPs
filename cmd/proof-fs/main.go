@@ -66,6 +66,10 @@ func main() {
 	rounds := flag.Int("rounds", 3, "gate mode: improver rounds on the dev split")
 	execute := flag.Bool("execute", false, "gate mode, File System only: also execute every sealed call for real through the proxy runtime")
 	docs := flag.String("docs", "full", "gate mode: documentation the simulated server ships: full (the dataset's descriptions) or none (names and schemas only; adds a restore-the-docs positive control)")
+	proposerModel := flag.String("proposer-model", "", "gate mode: model for the improver and the retention judge (default: -model)")
+	concurrency := flag.Int("concurrency", 8, "gate mode: parallel model calls (use 1-2 for providers with tight per-minute limits)")
+	baselineOnly := flag.Bool("baseline-only", false, "gate mode: measure the sealed baseline and headroom, then stop (a cheap probe)")
+	skipControls := flag.Bool("skip-controls", false, "gate mode: skip the harmful and empty controls (restore still runs)")
 	mode := flag.String("mode", "proof", "proof: the original File System proof; gate: run the current product path (gate, confirm votes, retention) on any domain dataset, no server needed")
 	exportGolden := flag.String("export-golden", "", "write a golden set json (train=dev, holdout=sealed) to this path and exit")
 	flag.Parse()
@@ -85,7 +89,10 @@ func main() {
 			// the dataset's paths are relative ("./test_project_root/..."), so run the server in the workspace
 			execUp = &config.UpstreamConfig{Command: "npx", Args: []string{"-y", "@modelcontextprotocol/server-filesystem", absWS}, Dir: absWS}
 		}
-		res, err := runGateBench(ctx, client, *model, *dataset, *docs, *seed, *trainRatio, *limit, *rounds, execUp)
+		res, err := runGateBench(ctx, client, benchOpts{
+			Dataset: *dataset, Docs: *docs, Model: *model, ProposerModel: *proposerModel, Seed: *seed, TrainRatio: *trainRatio,
+			Limit: *limit, Rounds: *rounds, Concurrency: *concurrency, BaselineOnly: *baselineOnly, SkipControls: *skipControls, Exec: execUp,
+		})
 		if err != nil {
 			log.Fatal(err)
 		}

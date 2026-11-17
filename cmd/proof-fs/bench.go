@@ -48,7 +48,9 @@ type benchResult struct {
 	HarmfulExpected int                  `json:"harmful_expected"` // baseline-correct tasks the route moves to an unacceptable tool
 	EmptyVerdict    string               `json:"empty_verdict"`
 	// Docs is the documentation the simulated server ships: "full" (the dataset's descriptions) or "none".
-	Docs string `json:"docs"`
+	Docs          string `json:"docs"`
+	Model         string `json:"model"`
+	ProposerModel string `json:"proposer_model"`
 	// Restore is the positive control in -docs none: an overlay putting the real descriptions back.
 	// It is a known improvement, so the gate should PASS it whenever missing docs cost the agent at
 	// least a few sealed tasks; without it, a gate that never says pass is indistinguishable from a
@@ -74,7 +76,30 @@ type benchResult struct {
 // schemas only, as many real servers do); everything runs against that, and a third control restores
 // the real descriptions and must PASS when the gap is large enough to measure. With execUpstream set (File System), sealed calls are also executed for real through
 // the proxy runtime, so "correct" can be checked against "it actually ran".
-func runGateBench(ctx context.Context, client *agent.Client, model, datasetPath, docs string, seed int64, trainRatio float64, limit, rounds int, execUpstream *config.UpstreamConfig) (benchResult, error) {
+// benchOpts configures one domain run.
+type benchOpts struct {
+	Dataset       string
+	Docs          string // "full" or "none"
+	Model         string // the agent under test (selector)
+	ProposerModel string // the improver and retention judge; empty = Model
+	Seed          int64
+	TrainRatio    float64
+	Limit         int  // max tasks after shuffling (0 = all)
+	Rounds        int  // improver rounds
+	Concurrency   int  // parallel model calls (default 8; use 1-2 for providers with tight per-minute limits)
+	BaselineOnly  bool // measure the sealed baseline and headroom, then stop (a cheap probe before a full run)
+	SkipControls  bool // skip the harmful and empty controls (to save calls on a tight quota; restore still runs)
+	Exec          *config.UpstreamConfig
+}
+
+func runGateBench(ctx context.Context, client *agent.Client, o benchOpts) (benchResult, error) {
+	model, datasetPath, docs, seed, trainRatio, limit, rounds, execUpstream := o.Model, o.Dataset, o.Docs, o.Seed, o.TrainRatio, o.Limit, o.Rounds, o.Exec
+	if o.ProposerModel == "" {
+		o.ProposerModel = o.Model
+	}
+	if o.Concurrency <= 0 {
+		o.Concurrency = 8
+	}
 	if docs != "full" && docs != "none" {
 		return benchResult{}, fmt.Errorf("docs must be full or none, got %q", docs)
 	}
@@ -149,8 +174,8 @@ func runGateBench(ctx context.Context, client *agent.Client, model, datasetPath,
 	zero := 0.0
 	client.Temperature = &zero
 	sel := agent.OpenAISelector{Client: client, Model: model}
-	opt := selectiongate.EvalOptions{Concurrency: 8}
-	res := benchResult{Domain: filepath.Base(filepath.Dir(datasetPath)), Tools: len(live), Dev: len(dev), Sealed: len(sealed), Docs: docs}
+	opt := selectiongate.EvalOptions{Concurrency: o.Concurrency}
+	res := benchResult{Domain: filepath.Base(filepath.Dir(datasetPath)), Tools: len(live), Dev: len(dev), Sealed: len(sealed), Docs: docs, Model: model, ProposerModel: o.ProposerModel}
 	for _, t := range sealed {
 		if len(t.AcceptableTools) > 0 {
 			res.WithEquivalents++
@@ -182,8 +207,12 @@ func runGateBench(ctx context.Context, client *agent.Client, model, datasetPath,
 		fmt.Printf("[%s] headroom: the baseline misses %d sealed task(s); a pass needs at least %d fixed\n", res.Domain, head, need)
 	}
 
+	if o.BaselineOnly {
+		return res, nil
+	}
+
 	// ---- the improver learns on dev only
-	imp, err := agent.ImproveDescriptions(ctx, client, sel, live, empty, dev, agent.ImproveOptions{Rounds: rounds, Concurrency: 8, Model: model})
+	imp, err := agent.ImproveDescriptions(ctx, client, sel, live, empty, dev, agent.ImproveOptions{Rounds: rounds, Concurrency: o.Concurrency, Model: o.ProposerModel})
 	if err != nil {
 		return res, err
 	}
@@ -254,7 +283,7 @@ func runGateBench(ctx context.Context, client *agent.Client, model, datasetPath,
 				}
 			}
 			judgeFn := func(ctx context.Context, system, user string) (string, error) {
-				return client.CompleteJSON(ctx, model, system, user)
+				return client.CompleteJSON(ctx, o.ProposerModel, system, user)
 			}
 			losses, rerr := selectiongate.CheckRetention(ctx, judgeFn, pairs, 3)
 			d = selectiongate.ApplyRetention(d, losses, rerr, false)
@@ -278,19 +307,21 @@ func runGateBench(ctx context.Context, client *agent.Client, model, datasetPath,
 		res.SealedBase, res.SealedCand, res.Unstable = d.BaselineCorrect, d.CandidateCorrect, d.UnstableTasks
 	}
 
-	if from, to, expect := harmfulRoute(baseRun, sealed, live); from != "" {
-		fmt.Printf("[%s] harmful control: route %s -> %s should break %d sealed tasks\n", res.Domain, from, to, expect)
-		hd, _, err := judge("harmful", improvementsandbox.Overlay{Routing: []improvementsandbox.RouteRule{{FromTool: from, ToTool: to}}})
+	if !o.SkipControls {
+		if from, to, expect := harmfulRoute(baseRun, sealed, live); from != "" {
+			fmt.Printf("[%s] harmful control: route %s -> %s should break %d sealed tasks\n", res.Domain, from, to, expect)
+			hd, _, err := judge("harmful", improvementsandbox.Overlay{Routing: []improvementsandbox.RouteRule{{FromTool: from, ToTool: to}}})
+			if err != nil {
+				return res, err
+			}
+			res.HarmfulVerdict, res.HarmfulBroken, res.HarmfulExpected = string(hd.Verdict), hd.Broken, expect
+		}
+		ed, _, err := judge("empty", empty)
 		if err != nil {
 			return res, err
 		}
-		res.HarmfulVerdict, res.HarmfulBroken, res.HarmfulExpected = string(hd.Verdict), hd.Broken, expect
+		res.EmptyVerdict = string(ed.Verdict)
 	}
-	ed, _, err := judge("empty", empty)
-	if err != nil {
-		return res, err
-	}
-	res.EmptyVerdict = string(ed.Verdict)
 	if docs == "none" {
 		rd, _, err := judge("restore", restoreOverlay(realDocs))
 		if err != nil {

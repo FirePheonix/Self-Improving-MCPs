@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -35,6 +36,11 @@ func NewClient(labelModel, reasonModel string) (*Client, error) {
 	// OPENAI_BASE_URL lets tests point the offline agent at a local stub (see scripts/subagent-oracle).
 	if base := os.Getenv("OPENAI_BASE_URL"); base != "" {
 		opts = append(opts, option.WithBaseURL(base))
+	}
+	// OPENAI_MAX_RETRIES raises the SDK's retry count (default 2) for providers with tight per-minute
+	// limits; the SDK waits as the server's Retry-After asks. Daily-quota errors are not retried (fatal.go).
+	if n, err := strconv.Atoi(os.Getenv("OPENAI_MAX_RETRIES")); err == nil && n >= 0 {
+		opts = append(opts, option.WithMaxRetries(n))
 	}
 	return &Client{
 		api:    openai.NewClient(opts...),

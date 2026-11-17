@@ -21,6 +21,15 @@ func (e fatalAPIError) Fatal() bool { return true }
 // fatalCodes are OpenAI error codes that mean the account cannot make calls at all.
 var fatalCodes = map[string]bool{
 	"credit_balance_exhausted": true, "insufficient_quota": true, "invalid_api_key": true, "account_deactivated": true,
+	"model_not_found": true,
+}
+
+// dailyQuota matches a rate-limit message about a per-day limit (OpenAI-compatible providers such as Groq
+// answer 429 rate_limit_exceeded for both "wait a few seconds" and "come back tomorrow"). Only the
+// first is worth retrying; the second would turn every remaining call of the run into a failure.
+func dailyQuota(msg string) bool {
+	m := strings.ToLower(msg)
+	return strings.Contains(m, "per day") || strings.Contains(m, "(rpd)") || strings.Contains(m, "(tpd)")
 }
 
 // classify wraps err as fatal when it says no call can succeed. The SDK's error text does not
@@ -32,14 +41,14 @@ func classify(err error) error {
 	}
 	var apiErr *openai.Error
 	if errors.As(err, &apiErr) {
-		if fatalCodes[apiErr.Code] || apiErr.StatusCode == 401 {
+		if fatalCodes[apiErr.Code] || apiErr.StatusCode == 401 || (apiErr.StatusCode == 429 && dailyQuota(apiErr.Message)) {
 			return fatalAPIError{err}
 		}
 		return err
 	}
 	// not an SDK error (for example a stub or gateway in front of the API): fall back to the text
 	msg := err.Error()
-	if strings.Contains(msg, "401 Unauthorized") {
+	if strings.Contains(msg, "401 Unauthorized") || (strings.Contains(msg, "429") && dailyQuota(msg)) {
 		return fatalAPIError{err}
 	}
 	for code := range fatalCodes {
