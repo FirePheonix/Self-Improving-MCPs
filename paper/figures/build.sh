@@ -11,7 +11,7 @@ done
 [ -n "$CHROME" ] || { echo "set CHROME to a Chrome/Chromium binary"; exit 1; }
 abs() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else echo "$1"; fi; }
 OUT=paper/figures
-for name in how-it-works gate results; do
+for name in how-it-works gate results ceiling models; do
   svg="docs/assets/$name-light.svg"
   vb=$(sed -n 's/.*viewBox="0 0 \([0-9.]*\) \([0-9.]*\)".*/\1 \2/p' "$svg" | head -1)
   w=${vb% *}; h=${vb#* }

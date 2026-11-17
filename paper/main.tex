@@ -42,8 +42,11 @@ MCPToolBench++ with \texttt{gpt-4.1-mini} as the agent, the gate failed every de
 predicted number of broken tasks and never reported a difference for an empty change. For a server shipped without
 descriptions, the loop learned descriptions that fixed 17 sealed tasks and broke none ($p<10^{-4}$), outperforming the server's
 own descriptions (15 fixed, 2 broken). Where servers already document their tools, it found nothing to ship, and we show that
-this is because the agent rarely depends on descriptions there. We also report the measurement errors that, uncorrected, had
-produced a spurious +8.6-point gain.
+this is because that agent rarely depends on descriptions: it scores the same or better without them on four of five domains.
+Open-weight agents behave differently: removing descriptions costs \texttt{gpt-oss-20b} 8 of 73 File System tasks and
+\texttt{gpt-oss-120b} 6. We argue that strong agents make poor, short-lived test subjects (too few mistakes to measure, and
+indifference to the interface being improved) and adopt a small open agent as the primary testbed. We also report the
+measurement errors that, uncorrected, had produced a spurious +8.6-point gain.
 \end{abstract}
 
 \section{Introduction}
@@ -187,8 +190,37 @@ sealed gate decides once per candidate.
 \paragraph{Data and agent.} MCPToolBench++~\cite{mcptoolbenchpp} provides real tool lists of public MCP servers and labeled
 requests with equivalent tools. We use the five domains with enough tools to make choosing non-trivial: Browser (32 tools),
 File System (11), Map (32), Pay (6), Search (5). Tasks are shuffled with seed 2026 and split 70/30 into DEV and SEALED; DEV tasks
-whose normalised text appears in SEALED are removed. The agent is \texttt{gpt-4.1-mini} at temperature 0. File System calls are
-additionally executed through the real proxy against the real server on a fresh fixture copy per arm.
+whose normalised text appears in SEALED are removed. Two agent setups are used, both at temperature 0 through an
+OpenAI-compatible API. The five-domain runs use \texttt{gpt-4.1-mini} as both agent and improver. The \emph{primary testbed}, chosen
+for the reasons below, uses the open-weight \texttt{gpt-oss-20b} as the agent and \texttt{gpt-oss-120b} as the improver and
+retention judge, served by Groq. File System calls are additionally executed through the real proxy against the real server on a
+fresh fixture copy per arm.
+
+\paragraph{Choosing the agent under test.} A test can only measure what the agent gets wrong (Figure~\ref{fig:ceiling}), and we
+found that results measured on strong agents are ephemeral: they say little about the method and expire with the next model.
+\begin{enumerate}
+  \item \emph{No room, no evidence.} A pass needs at least 5 fixed tasks with none broken. \texttt{gpt-4.1-mini} misses 1 of 57
+        Browser and 2 of 55 Search tasks; a Claude-class selector solved 72 of 73 File System tasks, and 73 of 73 when told to read
+        only the first sentence of each description. On such sets every verdict is \incon{} whatever the change does.
+  \item \emph{Some agents barely read descriptions.} Without any descriptions \texttt{gpt-4.1-mini} scores the same or better on
+        four of five domains. An improvement to descriptions cannot appear in an agent that does not use them.
+  \item \emph{Their remaining mistakes are noise.} What a strong agent still gets wrong is mostly borderline tasks it answers
+        inconsistently between runs, and label artefacts; optimising against them learns the benchmark and changes with every
+        model release.
+  \item \emph{Small agents are the deployment that matters.} Cost, latency and self-hosting push production toward small and open
+        models, which depend on the tool interface.
+  \item \emph{Cost bounds rigour.} Several seeds and controls are affordable with a small hosted model.
+\end{enumerate}
+In production the gate should use a selector that resembles the operator's own agent; this choice concerns measuring the method.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/ceiling.pdf}
+  \caption{Headroom. Each square is a sealed task; coloured squares are tasks the agent gets wrong. A strong agent on Browser
+  leaves one, so no change can reach the five fixed tasks a pass needs. A small agent on File System without descriptions
+  leaves ten.}
+  \label{fig:ceiling}
+\end{figure}
 
 \paragraph{Three levels of correctness.} We report, for every baseline, exact-name accuracy (the benchmark's usual metric),
 equivalent-name accuracy, and executable accuracy (the gate's $c$). The gaps between them turned out to be the most important
@@ -206,7 +238,7 @@ control, \emph{restore}, puts the real descriptions back.
 
 \begin{table}[t]
 \centering\small
-\caption{Servers with their real descriptions. Sealed-set baseline under three correctness levels, improver result on DEV and the
+\caption{\texttt{gpt-4.1-mini}, servers with their real descriptions. Sealed-set baseline under three correctness levels, improver result on DEV and the
 gate's verdict on SEALED. $^\dagger$This run's harmful control routed to an equivalent twin and broke nothing (corrected in
 Table~\ref{tab:nodocs}). $^\ddagger$No argument-compatible route exists.}
 \label{tab:full}
@@ -225,7 +257,7 @@ File System & 73  & 64 / 64 / 64  & 147$\to$149 & \incon{} (64$\to$64) & \fail, 
 
 \begin{table}[t]
 \centering\small
-\caption{Servers without descriptions. Headroom is the number of sealed tasks the baseline gets wrong; a pass needs at least 5
+\caption{\texttt{gpt-4.1-mini}, servers without descriptions. Headroom is the number of sealed tasks the baseline gets wrong; a pass needs at least 5
 fixed with none broken. Harmful: verdict, broken tasks (predicted). Empty controls were \incon{} in all five domains.}
 \label{tab:nodocs}
 \begin{tabular}{lcccccc}
@@ -262,9 +294,42 @@ address''), name the neighbouring tool to use instead, use the parameter names, 
 server's own descriptions, which fixed 15 but broke 2 and are therefore failed by the zero-regression rule. Pruning was necessary:
 each full proposal scored below the DEV baseline (239, 246 and 250 of 346 against 268), each pruned one above it (271, 260, 288).
 
-\paragraph{Descriptions rarely matter for this agent here.} Without any descriptions, Browser, Search and File System score the
-same as with them, and Pay scores higher (89 vs 86 of 93). The agent chooses mostly from tool names and schemas. This, rather
-than a weak improver, explains why the documented servers yielded nothing to ship.
+\paragraph{Whether descriptions matter depends on the agent.} Without any descriptions, \texttt{gpt-4.1-mini} scores the same on
+Browser, Search and File System, and higher on Pay (89 vs 86 of 93): it chooses mostly from tool names and schemas. This, rather
+than a weak improver, explains why the documented servers yielded nothing to ship. The gpt-oss agents behave differently
+(Table~\ref{tab:oss}, Figure~\ref{fig:models}): on the same 73 File System tasks, removing descriptions costs \texttt{gpt-oss-20b}
+8 tasks and \texttt{gpt-oss-120b} 6. Size is not the explanation: the larger gpt-oss model scores below the smaller one with the
+real descriptions (69 vs 71). With their descriptions both gpt-oss agents leave fewer than 5 sealed errors (a blind test); without
+them both miss 10, a gap with a known remedy and the setting in which the loop is meant to work.
+
+\begin{table}[t]
+\centering\small
+\caption{Primary testbed, File System, 73 sealed tasks, executable correctness. Headroom is the number of sealed tasks the
+baseline gets wrong.}
+\label{tab:oss}
+\begin{tabular}{lcccc}
+\toprule
+Agent & Real descriptions & No descriptions & Descriptions worth & Headroom (with / without) \\
+\midrule
+\texttt{gpt-oss-20b}  & \textbf{71} & 63 & 8 & 2 / 10 \\
+\texttt{gpt-oss-120b} & 69          & 63 & 6 & 4 / 10 \\
+\texttt{gpt-4.1-mini} & 64          & 64 & 0 & 9 / 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/models.pdf}
+  \caption{Sealed tasks right with the server's real descriptions (filled) and with descriptions removed (hollow), by agent and
+  domain.}
+  \label{fig:models}
+\end{figure}
+
+\paragraph{The primary-testbed loop is not finished.} A reduced no-descriptions run (200 tasks, 60 sealed, 2 improver rounds,
+controls skipped) measured the sealed baseline at 54/60 and was then stopped, as designed, by the provider's free-tier daily token
+limit during the improver's first DEV pass. The full run needs roughly $9\times10^5$ agent tokens. Its result is the most important
+open measurement of this work.
 
 \section{What we got wrong}\label{sec:lessons}
 
@@ -288,7 +353,8 @@ The evaluation was corrected several times, and the corrections are the most tra
 
 \section{Limitations}
 
-The positive result rests on one domain, one seed and one agent model; a second seed was blocked by API quota. The agent is a
+The positive result rests on one domain, one seed and one agent model (\texttt{gpt-4.1-mini}); a second seed was blocked by API
+quota, and the full loop on the primary testbed was stopped by a free-tier daily limit. The agent is a
 single-call stand-in for production agents in multi-step sessions, and some remaining Map ``errors'' (geocoding before asking
 for directions) are plausible first steps scored against a single-call label. Labels come from a benchmark; for real servers,
 golden tasks are drafted from the tool documentation and approved by a person, and drafted tasks are easier than real traffic.
@@ -300,13 +366,17 @@ a common situation, not a measured deployment.
 Self-improving tool interfaces are feasible only with a judge that is harder to fool than the improver is to write. With
 executable correctness, equivalence-aware labels, decisive re-voting, fatal regressions and known-answer controls, the gate
 refused every harmful and every unproven change across five domains and passed one real improvement, learned from mistakes and
-validated on unseen tasks. The next steps are a second seed and model, real traffic in place of benchmark labels, and multi-step
-tasks where a description's value is the call that follows the choice.
+validated on unseen tasks. Choosing the agent under test turned out to matter as much as the method: a strong agent leaves too
+few mistakes, and may not read descriptions at all, so its results say little and do not last. The next steps are the full loop
+on the primary testbed (\texttt{gpt-oss-20b} without descriptions), further seeds, real traffic in place of benchmark labels, and
+multi-step tasks where a description's value is the call that follows the choice.
 
 \appendix
 \section{Reproducibility}
 Code, figures and this paper: \url{https://github.com/FirePheonix/Self-Improving-MCPs}. The benchmark is run with
-\texttt{sh scripts/bench/run-all.sh [seed]}; the no-descriptions condition with \texttt{DOCS=none}. Each domain writes a log
+\texttt{sh scripts/bench/run-all.sh [seed]} (Groq and gpt-oss by default, \texttt{PROVIDER=openai} for the
+\texttt{gpt-4.1-mini} runs); the no-descriptions condition with \texttt{DOCS=none}, a cheap baseline probe with
+\texttt{BASELINE\_ONLY=1}. Each domain writes a log
 with one machine-readable result line containing every verdict, count, candidate overlay, mistake group and improver round.
 
 \bibliographystyle{plainnat}
