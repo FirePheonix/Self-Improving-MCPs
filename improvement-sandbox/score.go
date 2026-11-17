@@ -10,17 +10,17 @@ import (
 
 // Scorecard compares baseline vs candidate replay stats.
 type Scorecard struct {
-	BaselineCalls   int     `json:"baseline_calls"`
-	CandidateCalls  int     `json:"candidate_calls"`
-	BaselineErrors  int     `json:"baseline_errors"`
-	CandidateErrors int     `json:"candidate_errors"`
-	BaselineP95Ms   float64 `json:"baseline_p95_ms"`
-	CandidateP95Ms  float64 `json:"candidate_p95_ms"`
-	BaselineErrRate float64 `json:"baseline_error_rate"`
+	BaselineCalls    int     `json:"baseline_calls"`
+	CandidateCalls   int     `json:"candidate_calls"`
+	BaselineErrors   int     `json:"baseline_errors"`
+	CandidateErrors  int     `json:"candidate_errors"`
+	BaselineP95Ms    float64 `json:"baseline_p95_ms"`
+	CandidateP95Ms   float64 `json:"candidate_p95_ms"`
+	BaselineErrRate  float64 `json:"baseline_error_rate"`
 	CandidateErrRate float64 `json:"candidate_error_rate"`
-	EfficiencyWin   bool    `json:"efficiency_win"`
-	Promote         bool    `json:"promote"`
-	Reason          string  `json:"reason"`
+	EfficiencyWin    bool    `json:"efficiency_win"`
+	Promote          bool    `json:"promote"`
+	Reason           string  `json:"reason"`
 }
 
 // Score builds a scorecard and applies promote thresholds.

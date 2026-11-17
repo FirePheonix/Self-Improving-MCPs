@@ -9,8 +9,8 @@ import (
 // Cache is process-local for the duration of a sandbox run.
 func WrapCall(upstream CallFunc, overlay Overlay) CallFunc {
 	cache := map[string]struct {
-		ok  bool
-		ms  int64
+		ok bool
+		ms int64
 	}{}
 
 	return func(ctx context.Context, tool string, args map[string]any) (bool, int64, error) {
